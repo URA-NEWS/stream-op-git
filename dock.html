@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stream OP Dock</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: #fff7e9;
+      background: #120704;
+      font-family: "Yu Gothic", "Yu Gothic UI", "Meiryo", sans-serif;
+    }
+    main { padding: 14px; display: grid; gap: 12px; }
+    h1 { margin: 0 0 4px; font-size: 18px; line-height: 1.2; }
+    .hint { margin: 0 0 8px; color: rgba(255,247,233,.62); font-size: 12px; line-height: 1.5; }
+    label { display: grid; gap: 5px; font-size: 12px; font-weight: 900; color: #ffd064; letter-spacing: .04em; }
+    input, textarea {
+      width: 100%;
+      color: #fff7e9;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,208,100,.34);
+      outline: none;
+      padding: 10px 11px;
+      font: 800 14px/1.35 "Yu Gothic", "Meiryo", sans-serif;
+    }
+    textarea { min-height: 62px; resize: vertical; }
+    input:focus, textarea:focus { border-color: #ff8b1f; box-shadow: 0 0 0 2px rgba(255,139,31,.22); }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    button {
+      border: 0;
+      padding: 11px 10px;
+      color: #1b0804;
+      background: linear-gradient(90deg, #ffd064, #ff8b1f, #ff345c);
+      font-weight: 950;
+      cursor: pointer;
+    }
+    button.secondary { color: #fff7e9; background: rgba(255,255,255,.12); border: 1px solid rgba(255,208,100,.26); }
+    .saved { min-height: 18px; color: rgba(255,247,233,.68); font-size: 12px; }
+  </style>
+</head>
+<body>
+  <main>
+    <div>
+      <h1>OPテロップ編集</h1>
+      <p class="hint">OBSのカスタムブラウザドックにこのページを追加。入力は自動保存され、OP画面に反映されます。</p>
+    </div>
+
+    <label>ブランド<input data-key="brand"></label>
+    <label>サブタイトル<input data-key="subtitle"></label>
+    <label>右上ステータス<input data-key="status"></label>
+    <label>英字ラベル<input data-key="kicker"></label>
+
+    <div class="row">
+      <label>大見出し 1<input data-key="title1"></label>
+      <label>大見出し 2<input data-key="title2"></label>
+    </div>
+
+    <label>内容 01<input data-key="item1"></label>
+    <label>内容 02<input data-key="item2"></label>
+    <label>内容 03<input data-key="item3"></label>
+    <label>下部ループ文字<textarea data-key="ticker"></textarea></label>
+
+    <div class="row">
+      <button id="apply">反映</button>
+      <button id="reset" class="secondary">デフォルトに戻す</button>
+    </div>
+    <div class="saved" id="saved"></div>
+  </main>
+
+  <script>
+    const defaults = {
+      brand: "= eru",
+      subtitle: "STREAM OPENING",
+      status: "ON AIR SOON",
+      kicker: "TODAY'S STREAM",
+      title1: "本日の",
+      title2: "配信内容",
+      item1: "近況トークと今日の流れ",
+      item2: "メイン企画・注目ポイント",
+      item3: "コメント返しと告知",
+      ticker: "TODAY'S STREAM CONTENTS / LIVE STARTING SOON / = ERU / "
+    };
+    const channel = new BroadcastChannel("eru-stream-op");
+    const fields = [...document.querySelectorAll("[data-key]")];
+    const saved = document.getElementById("saved");
+
+    function readState() {
+      try {
+        return { ...defaults, ...JSON.parse(localStorage.getItem("eruStreamOpText") || "{}") };
+      } catch {
+        return { ...defaults };
+      }
+    }
+
+    function fill(state) {
+      fields.forEach((field) => field.value = state[field.dataset.key] || "");
+    }
+
+    function collect() {
+      const state = {};
+      fields.forEach((field) => state[field.dataset.key] = field.value);
+      return state;
+    }
+
+    function apply() {
+      const state = collect();
+      localStorage.setItem("eruStreamOpText", JSON.stringify(state));
+      channel.postMessage({ type: "update", payload: state });
+      saved.textContent = "反映しました";
+      clearTimeout(window.__savedTimer);
+      window.__savedTimer = setTimeout(() => saved.textContent = "", 1400);
+    }
+
+    fill(readState());
+    fields.forEach((field) => field.addEventListener("input", apply));
+    document.getElementById("apply").addEventListener("click", apply);
+    document.getElementById("reset").addEventListener("click", () => {
+      localStorage.removeItem("eruStreamOpText");
+      fill(defaults);
+      channel.postMessage({ type: "reset" });
+      saved.textContent = "デフォルトに戻しました";
+    });
+  </script>
+</body>
+</html>

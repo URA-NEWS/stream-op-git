@@ -1,0 +1,465 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=1280, initial-scale=1">
+  <title>Stream OP - Today's Agenda</title>
+  <style>
+    :root {
+      --cream: #f2e4c2;
+      --muted: rgba(242,228,194,.68);
+      --red: #b51622;
+      --red-bright: #e33232;
+      --gold: #d3a44a;
+      --black: #050403;
+      --panel: rgba(7,5,4,.78);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: transparent;
+      font-family: "Yu Gothic", "Yu Gothic UI", "Meiryo", sans-serif;
+    }
+
+    .stage {
+      position: relative;
+      width: 1280px;
+      height: 720px;
+      overflow: hidden;
+      color: var(--cream);
+      isolation: isolate;
+      background: var(--black);
+    }
+
+    .stage::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      background:
+        radial-gradient(circle at 50% 26%, transparent 0 24%, rgba(0,0,0,.28) 52%, rgba(0,0,0,.82) 100%),
+        linear-gradient(90deg, rgba(0,0,0,.84), rgba(0,0,0,.18) 48%, rgba(0,0,0,.74));
+      pointer-events: none;
+    }
+
+    .stage::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 30;
+      pointer-events: none;
+      opacity: .12;
+      mix-blend-mode: screen;
+      background:
+        radial-gradient(circle at 12% 20%, rgba(255,255,255,.32) 0 1px, transparent 1.4px),
+        radial-gradient(circle at 80% 62%, rgba(255,255,255,.22) 0 1px, transparent 1.3px),
+        repeating-linear-gradient(0deg, rgba(255,255,255,.05) 0 1px, transparent 1px 4px);
+      background-size: 8px 8px, 13px 13px, auto;
+      animation: noiseHit 5.4s steps(2,end) infinite;
+    }
+
+    .photo {
+      position: absolute;
+      inset: -90px;
+      width: calc(100% + 180px);
+      height: calc(100% + 180px);
+      object-fit: cover;
+      object-position: center 45%;
+      filter: grayscale(.24) sepia(.12) brightness(.72) contrast(1.18);
+      transform: scale(1.02);
+      animation: photoMove 14s ease-in-out infinite;
+      z-index: 0;
+    }
+
+    .ink {
+      position: absolute;
+      z-index: 2;
+      inset: 0;
+      background:
+        linear-gradient(180deg, rgba(0,0,0,.06), rgba(0,0,0,.46)),
+        radial-gradient(circle at 72% 35%, rgba(181,22,34,.30), transparent 27%),
+        radial-gradient(circle at 20% 72%, rgba(211,164,74,.13), transparent 30%);
+      pointer-events: none;
+    }
+
+    .brand {
+      position: absolute;
+      z-index: 6;
+      left: 70px;
+      top: 54px;
+      display: flex;
+      align-items: baseline;
+      gap: 20px;
+    }
+
+    .brand-main {
+      color: var(--cream);
+      font: 700 44px/1 Georgia, "Times New Roman", serif;
+      letter-spacing: .18em;
+    }
+
+    .brand-sub {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: .28em;
+    }
+
+    .status {
+      position: absolute;
+      z-index: 6;
+      right: 70px;
+      top: 56px;
+      padding: 12px 24px;
+      min-width: 226px;
+      color: var(--cream);
+      background: rgba(0,0,0,.42);
+      border: 1px solid rgba(242,228,194,.34);
+      font: 900 15px/1 "Arial Black", sans-serif;
+      text-align: center;
+      letter-spacing: .22em;
+      animation: fadeHold 5s ease-in-out infinite;
+    }
+
+    .title-block {
+      position: absolute;
+      z-index: 7;
+      left: 70px;
+      right: 70px;
+      top: 174px;
+      padding: 22px 0 34px;
+    }
+
+    .kicker {
+      margin: 0 0 18px;
+      color: var(--red-bright);
+      font: 900 22px/1 "Arial Black", sans-serif;
+      letter-spacing: .28em;
+      animation: fadeHold 5s ease-in-out infinite;
+    }
+
+    .kicker::before {
+      content: "";
+      display: inline-block;
+      width: 100px;
+      height: 3px;
+      margin-right: 20px;
+      vertical-align: .38em;
+      background: var(--red-bright);
+    }
+
+    h1 {
+      position: relative;
+      margin: 0;
+      color: var(--cream);
+      font-family: "Yu Mincho", "Hiragino Mincho ProN", "MS Mincho", serif;
+      font-size: 102px;
+      line-height: 1;
+      font-weight: 900;
+      letter-spacing: -.07em;
+      white-space: nowrap;
+      text-shadow:
+        7px 8px 0 rgba(0,0,0,.86),
+        -2px 0 0 rgba(205,32,45,.55),
+        2px 0 0 rgba(242,228,194,.2);
+    }
+
+    h1 .title-word {
+      position: relative;
+      display: inline-block;
+      animation: titleSlide 5.8s cubic-bezier(.18,.82,.2,1) infinite;
+    }
+
+    h1 .char {
+      display: inline-block;
+      min-width: .92em;
+      transform-origin: 50% 56%;
+      animation: letterPlay 5.8s cubic-bezier(.16,.86,.18,1) infinite;
+      animation-delay: calc(var(--i) * .045s);
+    }
+
+    h1 .char:nth-child(2n) {
+      animation-name: letterLift;
+    }
+
+    h1 .char:nth-child(3n) {
+      animation-name: letterGrain;
+    }
+
+    h1 .title-word:nth-child(2) {
+      margin-left: 34px;
+      animation-delay: .12s;
+    }
+
+    h1 .title-word:nth-child(2) .char {
+      animation-delay: calc(.16s + var(--i) * .045s);
+    }
+
+    .title-rule {
+      width: 820px;
+      height: 2px;
+      margin-top: 28px;
+      background: linear-gradient(90deg, var(--cream), var(--red-bright), transparent);
+      animation: ruleMove 5.2s ease-in-out infinite;
+    }
+
+    .program {
+      position: absolute;
+      z-index: 7;
+      left: 70px;
+      right: 70px;
+      bottom: 74px;
+      height: 168px;
+      overflow: hidden;
+    }
+
+    .program-label {
+      position: absolute;
+      left: 0;
+      top: 0;
+      color: rgba(242,228,194,.48);
+      font: 900 13px/1 "Arial Black", sans-serif;
+      letter-spacing: .28em;
+      writing-mode: vertical-rl;
+    }
+
+    .program-item {
+      position: absolute;
+      left: 108px;
+      right: 0;
+      top: 0;
+      height: 168px;
+      display: grid;
+      grid-template-columns: 150px 1fr;
+      align-items: center;
+      background:
+        linear-gradient(90deg, rgba(181,22,34,.86), rgba(7,5,4,.86) 150px, rgba(7,5,4,.64)),
+        repeating-linear-gradient(0deg, rgba(242,228,194,.045) 0 1px, transparent 1px 5px);
+      border: 1px solid rgba(242,228,194,.28);
+      box-shadow: 22px 24px 0 rgba(0,0,0,.28);
+      clip-path: polygon(0 0, 100% 0, 96% 100%, 0 100%);
+      opacity: 0;
+      animation: programCut 10.8s cubic-bezier(.18,.82,.2,1) infinite both;
+    }
+
+    .program-item:nth-child(3) { animation-delay: 3.6s; }
+    .program-item:nth-child(4) { animation-delay: 7.2s; }
+
+    .program-item::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(105deg, transparent 0 34%, rgba(242,228,194,.15) 48%, transparent 62%);
+      transform: translateX(-120%);
+      opacity: 0;
+      animation: paperWipe 10.8s ease-in-out infinite both;
+      pointer-events: none;
+    }
+
+    .program-item:nth-child(3)::after { animation-delay: 3.6s; }
+    .program-item:nth-child(4)::after { animation-delay: 7.2s; }
+
+    .num {
+      position: relative;
+      z-index: 2;
+      color: var(--cream);
+      font: 900 70px/1 Georgia, serif;
+      letter-spacing: .04em;
+      text-align: center;
+    }
+
+    .program-item span:last-child {
+      position: relative;
+      z-index: 2;
+      color: var(--cream);
+      padding-right: 42px;
+      font-size: 48px;
+      line-height: 1.1;
+      font-weight: 950;
+      letter-spacing: -.05em;
+      text-shadow: 5px 5px 0 rgba(0,0,0,.7);
+    }
+
+    .ticker {
+      position: absolute;
+      z-index: 8;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 34px;
+      overflow: hidden;
+      background: rgba(0,0,0,.82);
+      border-top: 1px solid rgba(242,228,194,.22);
+      color: rgba(242,228,194,.72);
+      font: 900 14px/34px "Arial Black", sans-serif;
+      letter-spacing: .22em;
+      white-space: nowrap;
+    }
+
+    .ticker span {
+      display: inline-block;
+      padding-left: 100%;
+      animation: ticker 18s linear infinite;
+    }
+
+    @keyframes titleSlide {
+      0% { opacity: .56; transform: translateX(30px); filter: blur(1px); }
+      18%,72% { opacity: 1; transform: translateX(0); filter: blur(0); }
+      100% { opacity: .56; transform: translateX(-24px); filter: blur(1px); }
+    }
+
+    @keyframes letterPlay {
+      0%, 16%, 31%, 100% { transform: translate(0,0); filter: none; color: var(--cream); }
+      19% { transform: translate(-3px,-2px); filter: contrast(1.45) brightness(1.12); color: #fff8df; }
+      22% { transform: translate(2px,1px); filter: contrast(1.85); color: #f2e4c2; }
+      25% { transform: translate(0,-1px); filter: none; color: var(--cream); }
+    }
+
+    @keyframes letterLift {
+      0%, 43%, 58%, 100% { transform: translate(0,0); filter: none; }
+      46% { transform: translate(0,-7px); filter: brightness(1.18); }
+      49% { transform: translate(0,2px); filter: contrast(1.55); }
+      53% { transform: translate(0,0); filter: none; }
+    }
+
+    @keyframes letterGrain {
+      0%, 62%, 77%, 100% { transform: translate(0,0); opacity: 1; filter: none; text-shadow: 7px 8px 0 rgba(0,0,0,.86); }
+      65% { transform: translate(3px,0); opacity: .92; filter: contrast(1.6); text-shadow: 5px 8px 0 rgba(0,0,0,.9), -1px 0 0 rgba(205,32,45,.42); }
+      68% { transform: translate(-2px,-1px); opacity: 1; filter: brightness(1.14); text-shadow: 8px 8px 0 rgba(0,0,0,.82); }
+      72% { transform: translate(0,0); opacity: 1; filter: none; text-shadow: 7px 8px 0 rgba(0,0,0,.86); }
+    }
+
+    @keyframes programCut {
+      0%, 7% {
+        opacity: 0;
+        transform: translateX(210px) scale(.98);
+        filter: blur(3px);
+      }
+      12%, 30% {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+        filter: blur(0);
+      }
+      36%, 100% {
+        opacity: 0;
+        transform: translateX(-120px) scale(.99);
+        filter: blur(2px);
+      }
+    }
+
+    @keyframes paperWipe {
+      0%, 10%, 100% { opacity: 0; transform: translateX(-120%); }
+      16% { opacity: .8; }
+      28% { opacity: 0; transform: translateX(120%); }
+    }
+
+    @keyframes noiseHit {
+      0%,60%,100% { opacity: .10; transform: translate(0,0); }
+      64% { opacity: .52; transform: translate(-2px,1px); }
+      68% { opacity: .16; transform: translate(2px,-1px); }
+      72% { opacity: .62; transform: translate(1px,2px); }
+      78% { opacity: .12; transform: translate(0,0); }
+    }
+
+    @keyframes photoMove {
+      0%,100% { transform: scale(1.02) translateX(0); }
+      50% { transform: scale(1.06) translateX(-12px); }
+    }
+
+    @keyframes fadeHold {
+      0%,100% { opacity: .68; }
+      50% { opacity: 1; }
+    }
+
+    @keyframes ruleMove {
+      0%,100% { opacity: .34; transform: translateX(-22px); }
+      50% { opacity: .92; transform: translateX(0); }
+    }
+
+    @keyframes ticker { to { transform: translateX(-100%); } }
+  </style>
+</head>
+<body>
+  <main class="stage">
+    <img class="photo" src="eru-promo.png" alt="">
+    <i class="ink"></i>
+
+    <header class="brand">
+      <div class="brand-main" data-field="brand">= eru</div>
+      <div class="brand-sub" data-field="subtitle">STREAM OPENING</div>
+    </header>
+    <div class="status" data-field="status">ON AIR SOON</div>
+
+    <section class="title-block">
+      <p class="kicker" data-field="kicker">TODAY'S STREAM</p>
+      <h1><span class="title-word" data-field="title1" data-text="本日の">本日の</span><span class="title-word" data-field="title2" data-text="配信内容">配信内容</span></h1>
+      <div class="title-rule"></div>
+    </section>
+
+    <section class="program">
+      <div class="program-label">PROGRAM</div>
+      <div class="program-item"><span class="num">01</span><span data-field="item1">近況トークと今日の流れ</span></div>
+      <div class="program-item"><span class="num">02</span><span data-field="item2">メイン企画・注目ポイント</span></div>
+      <div class="program-item"><span class="num">03</span><span data-field="item3">コメント返しと告知</span></div>
+    </section>
+
+    <i class="noise"></i>
+    <div class="ticker"><span data-field="ticker">TODAY'S STREAM CONTENTS / LIVE STARTING SOON / = ERU / </span></div>
+  </main>
+
+  <script>
+    const defaults = {
+      brand: "= eru",
+      subtitle: "STREAM OPENING",
+      status: "ON AIR SOON",
+      kicker: "TODAY'S STREAM",
+      title1: "本日の",
+      title2: "配信内容",
+      item1: "近況トークと今日の流れ",
+      item2: "メイン企画・注目ポイント",
+      item3: "コメント返しと告知",
+      ticker: "TODAY'S STREAM CONTENTS / LIVE STARTING SOON / = ERU / "
+    };
+    const channel = new BroadcastChannel("eru-stream-op");
+    function readState() {
+      try { return { ...defaults, ...JSON.parse(localStorage.getItem("eruStreamOpText") || "{}") }; }
+      catch { return { ...defaults }; }
+    }
+    function renderTitle(node, value) {
+      node.textContent = "";
+      [...value].forEach((char, index) => {
+        const span = document.createElement("span");
+        span.className = "char";
+        span.style.setProperty("--i", index);
+        span.textContent = char;
+        node.appendChild(span);
+      });
+    }
+    function applyState(state) {
+      document.querySelectorAll("[data-field]").forEach((node) => {
+        const key = node.dataset.field;
+        const value = state[key] || defaults[key] || "";
+        node.dataset.text = value;
+        if (key === "title1" || key === "title2") {
+          renderTitle(node, value);
+        } else {
+          node.textContent = value;
+        }
+      });
+    }
+    applyState(readState());
+    channel.onmessage = (event) => {
+      if (event.data && event.data.type === "update") applyState({ ...defaults, ...event.data.payload });
+      if (event.data && event.data.type === "reset") applyState({ ...defaults });
+    };
+    window.addEventListener("storage", (event) => {
+      if (event.key === "eruStreamOpText") applyState(readState());
+    });
+  </script>
+</body>
+</html>
