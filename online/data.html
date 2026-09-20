@@ -5,23 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>イコエルAI Data Console</title>
   <style>
-    :root{color-scheme:dark;--bg:#050912;--panel:#0d1624;--line:#263f5f;--text:#f7fbff;--muted:#94a8c0;--green:#25d99a;--amber:#ffb84d}*{box-sizing:border-box;letter-spacing:0}body{margin:0;min-height:100vh;background:linear-gradient(150deg,#050912,#071322 60%,#03060b);color:var(--text);font:15px/1.65 system-ui,"Yu Gothic UI",Meiryo,sans-serif}.wrap{max-width:1120px;margin:auto;padding:32px}.top{display:flex;justify-content:space-between;gap:16px;align-items:end;margin-bottom:22px}.top h1{font-size:36px;margin:0}.top p{color:var(--muted);margin:8px 0 0}.badge{border:1px solid #315f9f;background:#0f1a2a;border-radius:8px;padding:8px 12px;color:#cfe2ff;font-size:12px;font-weight:900}.panel{border:1px solid var(--line);background:rgba(13,22,36,.92);border-radius:8px;padding:18px;margin-bottom:16px}.grid{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end}.field label{display:block;font-size:12px;color:#b4c6dc;font-weight:900;margin-bottom:6px}.input,.select{width:100%;border:1px solid #365778;background:#07101b;color:var(--text);border-radius:8px;padding:12px;font:inherit}button,a{border:1px solid #f7fbff;background:#f7fbff;color:#07101d;border-radius:8px;min-height:42px;padding:10px 14px;font-weight:900;text-decoration:none;cursor:pointer}.secondary{background:#101b2a;color:var(--text);border-color:#365778}.list{display:grid;gap:10px}.item{border:1px solid var(--line);background:#08111d;border-radius:8px;padding:14px}.meta{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}.tag{border:1px solid #33597e;background:#0d2036;border-radius:999px;padding:4px 9px;font-size:12px;color:#dcecff;font-weight:900}.requested{color:var(--amber)}.completed{color:var(--green)}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#04080f;border:1px solid var(--line);border-radius:8px;padding:14px;margin:0;color:#dce7f8}.empty{color:var(--muted);border:1px dashed #365778;border-radius:8px;padding:26px;text-align:center}@media(max-width:780px){.top,.grid{grid-template-columns:1fr;display:grid}.wrap{padding:20px}}
+    :root{color-scheme:dark;--bg:#050912;--panel:#0d1624;--line:#263f5f;--text:#f7fbff;--muted:#94a8c0;--green:#25d99a;--amber:#ffb84d}*{box-sizing:border-box;letter-spacing:0}body{margin:0;min-height:100vh;background:linear-gradient(150deg,#050912,#071322 60%,#03060b);color:var(--text);font:15px/1.65 system-ui,"Yu Gothic UI",Meiryo,sans-serif}.wrap{max-width:1180px;margin:auto;padding:32px}.top{display:flex;justify-content:space-between;gap:16px;align-items:end;margin-bottom:22px}.top h1{font-size:36px;margin:0}.top p{color:var(--muted);margin:8px 0 0}.badge{border:1px solid #315f9f;background:#0f1a2a;border-radius:8px;padding:8px 12px;color:#cfe2ff;font-size:12px;font-weight:900}.panel{border:1px solid var(--line);background:rgba(13,22,36,.92);border-radius:8px;padding:18px;margin-bottom:16px}.grid{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end}.grid4{display:grid;grid-template-columns:1fr 1fr 150px auto;gap:10px;align-items:end}.field label{display:block;font-size:12px;color:#b4c6dc;font-weight:900;margin-bottom:6px}.input,.select{width:100%;border:1px solid #365778;background:#07101b;color:var(--text);border-radius:8px;padding:12px;font:inherit}button,a{border:1px solid #f7fbff;background:#f7fbff;color:#07101d;border-radius:8px;min-height:42px;padding:10px 14px;font-weight:900;text-decoration:none;cursor:pointer}.secondary{background:#101b2a;color:var(--text);border-color:#365778}.cols{display:grid;grid-template-columns:1fr 1fr;gap:16px}.list{display:grid;gap:10px}.item{border:1px solid var(--line);background:#08111d;border-radius:8px;padding:14px}.meta{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}.tag{border:1px solid #33597e;background:#0d2036;border-radius:999px;padding:4px 9px;font-size:12px;color:#dcecff;font-weight:900}.requested{color:var(--amber)}.completed{color:var(--green)}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#04080f;border:1px solid var(--line);border-radius:8px;padding:14px;margin:0;color:#dce7f8}.empty{color:var(--muted);border:1px dashed #365778;border-radius:8px;padding:26px;text-align:center}@media(max-width:880px){.top,.grid,.grid4,.cols{grid-template-columns:1fr;display:grid}.wrap{padding:20px}}
   </style>
 </head>
 <body>
   <main class="wrap">
     <section class="top">
-      <div><h1>データ収益化管理</h1><p>学習・品質改善・外部提供のデータ輸出リクエストを、同意がある目的だけ作る。</p></div>
+      <div><h1>データ収益化管理</h1><p>学習・品質改善・外部提供のデータ輸出リクエストを、同意と保持期間つきで管理する。</p></div>
       <div class="badge">CONSENT GATED</div>
     </section>
     <section class="panel">
       <div class="grid">
         <div class="field"><label>顧客API URL</label><input id="api" class="input" value="https://lcnuxfvjownsmqvuagkd.functions.supabase.co/ikoeru-customer-api"></div>
         <div class="field"><label>Supabase JWT</label><input id="token" class="input" type="password" placeholder="owner/operator JWT"></div>
-        <button id="load">一覧を読む</button>
+        <button id="loadAll">全部読む</button>
       </div>
     </section>
     <section class="panel">
+      <h2>輸出リクエスト</h2>
       <div class="grid">
         <div class="field"><label>目的</label><select id="purpose" class="select"><option value="service_improvement">品質改善</option><option value="model_training">AI学習</option><option value="external_data_sales">外部提供</option></select></div>
         <div class="field"><label>フィルタ</label><input id="filters" class="input" value='{"approved_only":true}'></div>
@@ -30,17 +31,33 @@
       <div class="meta" style="margin-top:12px"><a class="secondary" href="./index.html?v=5">管理トップ</a><a class="secondary" href="./customer.html?v=2">ユーザー管理</a><a class="secondary" href="./review.html">変更依頼</a></div>
       <pre id="status">同意がない目的はAPI側で拒否される。</pre>
     </section>
-    <section class="list" id="list"><div class="empty">まだ読込なし。</div></section>
+    <section class="panel">
+      <h2>保持期間</h2>
+      <div class="grid4">
+        <div class="field"><label>データ種別</label><select id="dataType" class="select"><option value="comments">コメント</option><option value="replies">AI返答</option><option value="feedback">フィードバック</option><option value="change_requests">変更依頼</option><option value="audio">音声</option><option value="exports">輸出ファイル</option></select></div>
+        <div class="field"><label>用途</label><input id="retentionPurpose" class="input" value="default"></div>
+        <div class="field"><label>保持日数</label><input id="retentionDays" class="input" type="number" min="1" max="3650" value="365"></div>
+        <button id="saveRetention">保存</button>
+      </div>
+    </section>
+    <section class="cols">
+      <div class="panel"><h2>輸出一覧</h2><section class="list" id="exports"><div class="empty">まだ読込なし。</div></section></div>
+      <div class="panel"><h2>保持ポリシー</h2><section class="list" id="retention"><div class="empty">まだ読込なし。</div></section></div>
+    </section>
+    <section class="panel"><h2>監査イベント</h2><section class="list" id="audit"><div class="empty">まだ読込なし。</div></section></section>
   </main>
 <script>
-const $=id=>document.getElementById(id);const list=$('list');
+const $=id=>document.getElementById(id);const exportsList=$('exports');const retentionList=$('retention');const auditList=$('audit');
 function base(){return $('api').value.trim().replace(/\/$/,'')}
 async function call(path,opt={}){const res=await fetch(base()+path,{...opt,headers:{'Content-Type':'application/json',Authorization:'Bearer '+$('token').value.trim(),...(opt.headers||{})},cache:'no-store'});const data=await res.json().catch(()=>({ok:false,error:'bad_json'}));if(!res.ok)throw new Error(data.error||res.status);return data}
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-function render(rows){if(!rows.length){list.innerHTML='<div class="empty">輸出リクエストはまだない。</div>';return}list.innerHTML=rows.map(r=>`<article class="item"><div class="meta"><span class="tag ${esc(r.status)}">${esc(r.status)}</span><span class="tag">${esc(r.purpose)}</span><span class="tag">${esc(new Date(r.created_at).toLocaleString('ja-JP'))}</span></div><pre>${esc(JSON.stringify(r.filters||{},null,2))}</pre></article>`).join('')}
-async function load(){try{$('status').textContent='読込中...';const data=await call('/api/customer/data-exports');$('status').textContent=JSON.stringify({ok:data.ok,count:(data.data_exports||[]).length},null,2);render(data.data_exports||[])}catch(e){$('status').textContent='読込失敗: '+e.message}}
-$('load').onclick=load;
-$('create').onclick=async()=>{try{let filters={};try{filters=JSON.parse($('filters').value||'{}')}catch(_e){throw new Error('filters_json_invalid')}const data=await call('/api/customer/data-exports',{method:'POST',body:JSON.stringify({purpose:$('purpose').value,filters})});$('status').textContent=JSON.stringify(data,null,2);await load()}catch(e){$('status').textContent='作成失敗: '+e.message+'\n先にユーザー管理画面で該当目的の許可を保存してください。'}};
+function renderExports(rows){exportsList.innerHTML=rows.length?rows.map(r=>`<article class="item"><div class="meta"><span class="tag ${esc(r.status)}">${esc(r.status)}</span><span class="tag">${esc(r.purpose)}</span><span class="tag">${esc(new Date(r.created_at).toLocaleString('ja-JP'))}</span></div><pre>${esc(JSON.stringify(r.filters||{},null,2))}</pre></article>`).join(''):'<div class="empty">輸出リクエストはまだない。</div>'}
+function renderRetention(rows){retentionList.innerHTML=rows.length?rows.map(r=>`<article class="item"><div class="meta"><span class="tag">${esc(r.data_type)}</span><span class="tag">${esc(r.purpose)}</span><span class="tag">${esc(r.retention_days)}日</span><span class="tag">${r.active?'active':'inactive'}</span></div></article>`).join(''):'<div class="empty">保持ポリシーはまだない。</div>'}
+function renderAudit(rows){auditList.innerHTML=rows.length?rows.map(r=>`<article class="item"><div class="meta"><span class="tag">${esc(r.event_type)}</span><span class="tag">${esc(r.purpose||'-')}</span><span class="tag">${esc(new Date(r.created_at).toLocaleString('ja-JP'))}</span></div><pre>${esc(JSON.stringify(r.metadata||{},null,2))}</pre></article>`).join(''):'<div class="empty">監査イベントはまだない。</div>'}
+async function loadAll(){try{$('status').textContent='読込中...';const [exportsData,retentionData,auditData]=await Promise.all([call('/api/customer/data-exports'),call('/api/customer/retention-policies'),call('/api/customer/export-audit-events')]);renderExports(exportsData.data_exports||[]);renderRetention(retentionData.retention_policies||[]);renderAudit(auditData.export_audit_events||[]);$('status').textContent=JSON.stringify({exports:(exportsData.data_exports||[]).length,retention:(retentionData.retention_policies||[]).length,audit:(auditData.export_audit_events||[]).length},null,2)}catch(e){$('status').textContent='読込失敗: '+e.message}}
+$('loadAll').onclick=loadAll;
+$('create').onclick=async()=>{try{let filters={};try{filters=JSON.parse($('filters').value||'{}')}catch(_e){throw new Error('filters_json_invalid')}const data=await call('/api/customer/data-exports',{method:'POST',body:JSON.stringify({purpose:$('purpose').value,filters})});$('status').textContent=JSON.stringify(data,null,2);await loadAll()}catch(e){$('status').textContent='作成失敗: '+e.message+'\n先にユーザー管理画面で該当目的の許可を保存してください。'}};
+$('saveRetention').onclick=async()=>{try{const data=await call('/api/customer/retention-policies',{method:'POST',body:JSON.stringify({data_type:$('dataType').value,purpose:$('retentionPurpose').value,retention_days:Number($('retentionDays').value),active:true})});$('status').textContent=JSON.stringify(data,null,2);await loadAll()}catch(e){$('status').textContent='保持期間保存失敗: '+e.message}};
 </script>
 </body>
 </html>
