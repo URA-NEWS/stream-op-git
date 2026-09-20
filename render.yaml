@@ -1,0 +1,47 @@
+services:
+  - type: web
+    name: ikoeru-ai-online-backend
+    runtime: node
+    plan: free
+    rootDir: online/backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_BASE_URL
+        sync: false
+      - key: PUBLIC_CONTROL_BASE_URL
+        value: https://ura-news.github.io/stream-op-git/online
+      - key: ADMIN_API_TOKEN
+        generateValue: true
+      - key: JOB_TOKEN
+        generateValue: true
+      - key: SCENE_READ_TOKEN
+        generateValue: true
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: TWITCASTING_USER_ID
+        value: l_xxx999
+      - key: TWITCASTING_CLIENT_ID
+        sync: false
+      - key: TWITCASTING_CLIENT_SECRET
+        sync: false
+      - key: LLM_PROVIDER
+        sync: false
+      - key: LLM_API_KEY
+        sync: false
+      - key: LLM_MODEL
+        value: gpt-4o-mini
+      - key: TTS_PROVIDER
+        value: none
+      - key: TTS_API_KEY
+        sync: false
+      - key: TTS_BASE_URL
+        sync: false
+      - key: TTS_VOICE
+        value: 玄野武宏
+      - key: TTS_SPEAKER_ID
+        value: 11
