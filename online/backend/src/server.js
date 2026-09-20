@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
+import { requireBearer, requireSceneTokenIfConfigured } from './auth.js';
 import { getComments, getCurrentLive, twitcastingConfigured } from './twitcasting.js';
 import { cleanReply, generateText } from './llm.js';
 import { buildIkoeruPrompt, fallbackReply } from './reply-policy.js';
@@ -43,7 +44,8 @@ app.get('/api/health', async (_req, res) => {
   res.json({ ok: true, service: 'ikoeru-ai-online', database, configured });
 });
 
-app.post('/api/integrations/twitcasting/test', async (_req, res) => {
+app.post('/api/integrations/twitcasting/test', async (req, res) => {
+  if (!requireBearer(req, res, 'ADMIN_API_TOKEN')) return;
   if (!twitcastingConfigured()) return res.status(503).json({ ok: false, error: 'twitcasting_not_configured' });
   try {
     const live = await getCurrentLive();
@@ -54,7 +56,8 @@ app.post('/api/integrations/twitcasting/test', async (_req, res) => {
   }
 });
 
-app.post('/api/jobs/twitcasting/poll', async (_req, res) => {
+app.post('/api/jobs/twitcasting/poll', async (req, res) => {
+  if (!requireBearer(req, res, 'JOB_TOKEN')) return;
   if (!requireSupabase(res)) return;
   if (!twitcastingConfigured()) return res.status(503).json({ ok: false, error: 'twitcasting_not_configured' });
   try {
@@ -83,7 +86,8 @@ app.post('/api/jobs/twitcasting/poll', async (_req, res) => {
   }
 });
 
-app.post('/api/jobs/replies/generate', async (_req, res) => {
+app.post('/api/jobs/replies/generate', async (req, res) => {
+  if (!requireBearer(req, res, 'JOB_TOKEN')) return;
   if (!requireSupabase(res)) return;
   const { data: comments, error } = await supabase.from('comments').select('*').order('received_at', { ascending: true }).limit(10);
   if (error) return res.status(500).json({ ok: false, error: 'comment_query_failed' });
@@ -111,7 +115,8 @@ app.post('/api/jobs/replies/generate', async (_req, res) => {
   res.json({ ok: true, generated });
 });
 
-app.post('/api/jobs/replies/synthesize', async (_req, res) => {
+app.post('/api/jobs/replies/synthesize', async (req, res) => {
+  if (!requireBearer(req, res, 'JOB_TOKEN')) return;
   if (!requireSupabase(res)) return;
   const { data: replies, error } = await supabase.from('replies').select('id,reply,audio_url').is('audio_url', null).eq('status', 'queued').order('created_at', { ascending: true }).limit(5);
   if (error) return res.status(500).json({ ok: false, error: 'reply_query_failed' });
@@ -129,6 +134,7 @@ app.post('/api/jobs/replies/synthesize', async (_req, res) => {
 });
 
 app.get('/api/characters/:id', async (req, res) => {
+  if (!requireBearer(req, res, 'ADMIN_API_TOKEN')) return;
   if (!requireSupabase(res)) return;
   const { data, error } = await supabase.from('characters').select('*').eq('id', req.params.id).single();
   if (error) return res.status(404).json({ ok: false, error: 'character_not_found' });
@@ -136,6 +142,7 @@ app.get('/api/characters/:id', async (req, res) => {
 });
 
 app.get('/api/scene/events', async (req, res) => {
+  if (!requireSceneTokenIfConfigured(req, res)) return;
   if (!requireSupabase(res)) return;
   const after = Number(req.query.after || 0);
   const streamId = String(req.query.stream_id || '');
@@ -149,6 +156,7 @@ app.get('/api/scene/events', async (req, res) => {
 });
 
 app.post('/api/streams/:id/emergency-stop', async (req, res) => {
+  if (!requireBearer(req, res, 'ADMIN_API_TOKEN')) return;
   if (!requireSupabase(res)) return;
   const { error } = await supabase.from('streams').update({ emergency_stop: true, status: 'emergency_stop', updated_at: new Date().toISOString() }).eq('id', req.params.id);
   if (error) return res.status(500).json({ ok: false, error: 'emergency_stop_failed' });
@@ -156,6 +164,7 @@ app.post('/api/streams/:id/emergency-stop', async (req, res) => {
 });
 
 app.post('/api/streams/:id/resume', async (req, res) => {
+  if (!requireBearer(req, res, 'ADMIN_API_TOKEN')) return;
   if (!requireSupabase(res)) return;
   const { error } = await supabase.from('streams').update({ emergency_stop: false, status: 'offline', updated_at: new Date().toISOString() }).eq('id', req.params.id);
   if (error) return res.status(500).json({ ok: false, error: 'resume_failed' });
@@ -164,6 +173,7 @@ app.post('/api/streams/:id/resume', async (req, res) => {
 
 const feedbackSchema = z.object({ reply_id: z.string().uuid(), rating: z.number().int().min(1).max(5).optional(), correction: z.string().max(2000).optional(), notes: z.string().max(2000).optional() });
 app.post('/api/feedback', async (req, res) => {
+  if (!requireBearer(req, res, 'ADMIN_API_TOKEN')) return;
   if (!requireSupabase(res)) return;
   const parsed = feedbackSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ ok: false, error: 'invalid_feedback' });
