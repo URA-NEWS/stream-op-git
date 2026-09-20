@@ -9,6 +9,7 @@
 - 管理画面: https://ura-news.github.io/stream-op-git/online/index.html?v=5
 - ユーザー管理画面: https://ura-news.github.io/stream-op-git/online/customer.html?v=2
 - 変更依頼レビュー: https://ura-news.github.io/stream-op-git/online/review.html
+- データ収益化管理: https://ura-news.github.io/stream-op-git/online/data.html
 - 納品キット作成画面: https://ura-news.github.io/stream-op-git/online/kits.html
 - OBS画面: https://ura-news.github.io/stream-op-git/online/scene.html?demo=1&v=5
 - Supabase安全API: https://lcnuxfvjownsmqvuagkd.functions.supabase.co/ikoeru-secure
@@ -23,9 +24,11 @@
 
 ユーザー管理画面は、顧客がSupabase JWTを入れて、自分に許可されたキャラクターと配信だけを読み込み、キャラの口調・会話設計・成長ルールの変更依頼を送れる形にした。変更依頼は直接本番キャラを書き換えず、`character_change_requests` に蓄積する。レビュー画面で依頼を読み、owner/operator JWTで適用・却下できる。適用時はキャラの旧版スナップショットを `character_versions` に保存してからプロンプトを更新する。
 
+データ収益化管理では、品質改善・AI学習・外部提供の目的別に、同意済みの場合だけ `data_exports` へ輸出リクエストを保存できる。
+
 OBS画面は左側を外部コメントビューア用に空け、右側にイコエルAI、吹き出し、瞬き、口パクを出す。画像パスはGitHub Pagesの絶対パスとrawフォールバックを持つ。
 
-OBSや外部ジョブが直接呼べる公開APIは、サービスロールを使う実装が安全判定で拒否されたため未公開。代わりに、テナントユーザーRLS、顧客変更依頼、学習許可、テナント/ストリーム別アクセストークンの土台を入れた。
+OBSや外部ジョブが直接呼べる公開APIは、サービスロールを使う実装が安全判定で拒否されたため未公開。代わりに、テナントユーザーRLS、顧客変更依頼、学習許可、データ輸出管理、テナント/ストリーム別アクセストークンの土台を入れた。
 
 ## API URLを作るルート
 
@@ -59,6 +62,8 @@ OBSや外部ジョブが直接呼べる公開APIは、サービスロールを�
 - 変更依頼の適用・却下API作成済み。
 - キャラ適用前スナップショット保存に対応済み。
 - 顧客の学習・外部提供許可保存API作成済み。
+- `data_exports` と同意ゲート付き輸出リクエストAPI作成済み。
+- データ収益化管理画面作成済み。
 - `access_tokens` とスコープ別トークン土台作成済み。
 - Node/Express APIコード作成済み。
 - TwitCastingコメント取得コード作成済み。
@@ -85,7 +90,7 @@ OBSや外部ジョブが直接呼べる公開APIは、サービスロールを�
 5. TwitCasting接続テストをする。
 6. OBSに `online/scene.html` を入れて実配信テストする。
 7. 音声生成バックエンドを本番用に接続する。
-8. データエクスポートとバックアップを本番用に固める。
+8. 実ファイル出力先のストレージとバックアップを本番用に固める。
 
 ## GitHubに入れない秘密情報
 
@@ -109,6 +114,7 @@ Render/Railway/Supabaseなどの環境変数へ入れる。
 - ユーザー管理画面が実JWTで顧客データを読める。
 - 顧客の変更依頼と学習許可がSupabaseに保存される。
 - 承認済み変更依頼がキャラ設定へ安全に適用される。
+- 同意済み目的だけデータ輸出リクエストを作れる。
 - ツイキャスコメントがSupabaseに保存される。
 - AI返答が生成される。
 - 音声生成される。
