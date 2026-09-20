@@ -1,43 +1,67 @@
 # Ikoeru AI Online Studio
 
-Online-only control and OBS scene workspace for イコエルAI.
+イコエルAIをオンライン配信システムにするための作業場所。
 
-Local runtime is no longer the target. New work should move toward hosted admin/customer dashboards, hosted API, hosted database, and network OBS URLs.
+ローカル運用は対象外。ここから先はオンラインだけで進める。
 
-## Online files
+## 今できていること
 
-- `online/index.html` - online admin portal prototype.
-- `online/scene.html` - OBS browser scene prototype. Left 50% is reserved for an external comment viewer; イコエルAI appears on the right with speech bubble, blinking, and lip-sync hooks.
-- `online/env.example` - cloud environment variable template. Do not commit real secrets.
-- `online/supabase-schema.sql` - Supabase schema draft.
-- `online/api-contract.md` - API contract for the online backend.
-- `online/deployment-checklist.md` - completion checklist for the online deployment.
-- `ONLINE_MIGRATION.md` - migration plan from local MVP to online-only operation.
+- 管理画面URLの土台: https://ura-news.github.io/stream-op-git/online/index.html?v=3
+- OBS画面URLの土台: https://ura-news.github.io/stream-op-git/online/scene.html?demo=1&v=3
+- Node/Express APIコード: `online/backend/`
+- TwitCasting取得処理: `online/backend/src/twitcasting.js`
+- AI返答生成処理: `online/backend/src/llm.js`
+- イコエルAIの会話方針: `online/backend/src/reply-policy.js`
+- TTS処理: `online/backend/src/tts.js`
+- Supabase DBスキーマ: `online/supabase-schema.sql`
+- 初期データSQL: `online/seed-ikoeru.sql`
+- Render設定: `online/backend/render.yaml`
+- Dockerfile: `online/backend/Dockerfile`
+- CI: `.github/workflows/online-backend.yml`
 
-## Static preview URLs
+## 実際に完了したオンライン作業
 
-If GitHub Pages is enabled for this repository from the `main` branch root, these paths should become available:
+- 既存Supabaseプロジェクト `Tool` を使用。
+- Project ref: `lcnuxfvjownsmqvuagkd`
+- イコエルAI用テーブル作成済み。
+- tenant `ikoeru-ai` 作成済み。
+- character `イコエルAI` 作成済み。
+- stream `twitcasting / l_xxx999` 作成済み。
 
-```text
-https://ura-news.github.io/stream-op-git/online/index.html
-https://ura-news.github.io/stream-op-git/online/scene.html?demo=1
-```
+## まだ動かない理由
 
-If Pages is not enabled, enable GitHub Pages in repository settings or deploy the `online/` folder to any static host.
+APIサーバーがまだネットにデプロイされていない。
 
-## Backend still required
+管理画面とOBS画面は表示できるが、裏側のAPI URLが未接続なので、ツイキャスコメント取得、AI返答、音声生成はまだ実行されない。
 
-The static files are only the online UI/OBS shell. Full completion requires an online API and database:
+## 次にやること
 
-- Supabase project with `online/supabase-schema.sql`.
-- Hosted API server on Render, Railway, Fly, VPS, or another provider.
-- Cloud environment variables from `online/env.example`.
-- TwitCasting credentials stored only in the hosting provider.
-- LLM and TTS providers for online reply/audio generation.
+1. RenderまたはRailwayに `online/backend` をデプロイする。
+2. ホスティング環境変数に秘密キーを入れる。
+3. `/api/health` を確認する。
+4. 管理画面にAPI URLを入れる。
+5. TwitCasting接続テストをする。
+6. OBSに `online/scene.html` を入れて実配信テストする。
 
-## Security rules
+## 必要な秘密情報
 
-- Never commit Client Secret, access tokens, API keys, or stream keys.
-- Tenant/customer data must be isolated in backend policies.
-- Emergency stop must be available online.
-- Training/data-sale exports require explicit permission records.
+GitHubには入れない。Render/Railway/Supabaseなどの環境変数へ入れる。
+
+- `SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `TWITCASTING_CLIENT_ID`
+- `TWITCASTING_CLIENT_SECRET`
+- `LLM_API_KEY`
+- `TTS_API_KEY`
+
+## 完成条件
+
+- ネット上のAPI URLが生きている。
+- 管理画面がAPIにつながる。
+- ツイキャスコメントがSupabaseに保存される。
+- AI返答が生成される。
+- 音声生成される。
+- OBS画面でイコエルAIが右側で喋る。
+- 左側は外部コメントビューア用に空いている。
+- 緊急停止できる。
+- 顧客ごとにキャラとデータを分けられる。
