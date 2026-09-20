@@ -5,99 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>イコエルAI Customer Console</title>
   <style>
-    :root{color-scheme:dark;--bg:#04070d;--panel:#0c1422;--panel2:#111b2b;--line:#244264;--line2:#35628e;--text:#f8fbff;--muted:#96abc4;--blue:#3a8bff;--cyan:#39d8ff;--orange:#ff9d2e;--green:#25d99a;--red:#ff5470;--shadow:0 28px 90px rgba(0,0,0,.36)}*{box-sizing:border-box;letter-spacing:0}html{scroll-behavior:smooth}body{margin:0;min-height:100vh;background:radial-gradient(circle at 78% 6%,rgba(58,139,255,.16),transparent 31%),linear-gradient(145deg,#05080e 0%,#07101d 46%,#04060a 100%);color:var(--text);font:15px/1.65 system-ui,"Yu Gothic UI",Meiryo,sans-serif}.layout{display:grid;grid-template-columns:240px minmax(0,1fr);min-height:100vh}.side{position:sticky;top:0;height:100vh;padding:22px 16px;border-right:1px solid #183454;background:rgba(3,8,15,.78);backdrop-filter:blur(16px)}.brand{display:grid;gap:4px;margin-bottom:22px}.brand b{font-size:20px}.brand span,.muted{color:var(--muted)}.nav{display:grid;gap:8px}.nav a{color:#dfeeff;text-decoration:none;border:1px solid transparent;border-radius:8px;padding:11px 12px;font-weight:900}.nav a:hover,.nav a.active{background:#0f2b4d;border-color:#2d6db0}.main{padding:30px clamp(18px,4vw,46px)}.hero{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:22px;align-items:end;margin-bottom:22px}.hero h1{font-size:clamp(32px,5vw,64px);line-height:1;margin:0 0 12px}.hero p{max-width:780px;color:#c5d7ee;margin:0}.statusBox{border:1px solid var(--line);background:rgba(12,20,34,.9);border-radius:8px;padding:16px;box-shadow:var(--shadow)}.pill{display:inline-flex;align-items:center;gap:8px;border:1px solid #365f8e;background:#0d2138;border-radius:999px;padding:7px 11px;font-weight:900;font-size:12px;color:#dceeff}.dot{width:8px;height:8px;border-radius:50%;background:var(--orange);box-shadow:0 0 16px rgba(255,157,46,.8)}.steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:18px 0}.step{border:1px solid var(--line);background:linear-gradient(180deg,#0d1727,#08101b);border-radius:8px;padding:14px;min-height:112px}.step span{color:#70b6ff;font-size:12px;font-weight:900}.step strong{display:block;font-size:20px;margin-top:8px}.step p{margin:5px 0 0;color:var(--muted);font-size:13px}.grid{display:grid;grid-template-columns:380px minmax(0,1fr);gap:18px}.panel{border:1px solid var(--line);background:rgba(10,17,29,.92);border-radius:8px;padding:18px;box-shadow:var(--shadow)}.panel h2{margin:0 0 12px;font-size:19px}.stack{display:grid;gap:12px}.field label{display:block;color:#b2c4db;font-size:12px;font-weight:900;margin-bottom:6px}.input,.area,.select{width:100%;border:1px solid #385a7e;background:#07101c;color:var(--text);border-radius:8px;padding:12px;font:inherit;outline:none}.input:focus,.area:focus,.select:focus{border-color:#5ba5ff;box-shadow:0 0 0 3px rgba(58,139,255,.18)}.area{min-height:128px;resize:vertical}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.actions{display:flex;gap:10px;flex-wrap:wrap}.btn,button{border:1px solid #f6f9ff;background:#f6f9ff;color:#07101d;border-radius:8px;min-height:42px;padding:10px 14px;font-weight:900;text-decoration:none;cursor:pointer}.secondary{background:#101b2b;color:var(--text);border-color:#3a5878}.ghost{background:transparent;color:#dceeff;border-color:#385a7e}.danger{background:#2a1018;color:#ffdce3;border-color:#873044}.ok{color:var(--green)}.warn{color:var(--orange)}.bad{color:var(--red)}.mini{font-size:12px;color:var(--muted)}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#050911;border:1px solid var(--line);border-radius:8px;padding:14px;min-height:120px;margin:0}.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.card{border:1px solid var(--line);background:#08111e;border-radius:8px;padding:14px}.card span{display:block;color:var(--muted);font-size:12px;font-weight:800}.card strong{display:block;font-size:20px;margin-top:5px}.note{border-left:4px solid var(--blue);background:#0b1727;padding:12px 14px;border-radius:8px;color:#d9e8ff}.console{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:18px}.preview{min-height:360px;position:relative;overflow:hidden;background:linear-gradient(90deg,#f7f8fa 0 50%,#e7e9ed 50% 100%);border:1px solid #30425c;border-radius:8px}.preview::before{content:"コメビュ配置エリア";position:absolute;left:22px;top:22px;color:#475569;font-weight:900}.preview .bubble{position:absolute;right:28px;bottom:40px;width:min(520px,58%);background:#fff;color:#101827;border:3px solid #101827;border-radius:20px;padding:22px;font-size:24px;font-weight:900;line-height:1.45}.preview .bubble::after{content:"";position:absolute;right:70px;bottom:-16px;width:26px;height:26px;background:#fff;border-right:3px solid #101827;border-bottom:3px solid #101827;transform:rotate(45deg)}.avatar{position:absolute;right:70px;bottom:0;width:220px;height:210px;background:linear-gradient(180deg,#111827,#020617);border-radius:120px 120px 20px 20px;border:1px solid #27364d}.avatar::before{content:"イコエルAI";position:absolute;left:36px;top:64px;color:#fff;font-weight:900}.list{display:grid;gap:10px}.item{border:1px solid #203b59;background:#07101c;border-radius:8px;padding:12px}.item strong{display:block}.item span{color:var(--muted);font-size:12px}@media(max-width:980px){.layout,.grid,.hero,.console,.row,.cards,.steps{grid-template-columns:1fr}.side{position:relative;height:auto}.main{padding:22px}.preview .bubble{left:18px;right:18px;width:auto;font-size:18px}.avatar{right:28px;width:160px;height:150px}}
+    :root{color-scheme:dark;--bg:#04070d;--panel:#0c1422;--panel2:#111b2b;--line:#244264;--line2:#35628e;--text:#f8fbff;--muted:#96abc4;--blue:#3a8bff;--cyan:#39d8ff;--orange:#ff9d2e;--green:#25d99a;--red:#ff5470;--shadow:0 28px 90px rgba(0,0,0,.36)}*{box-sizing:border-box;letter-spacing:0}html{scroll-behavior:smooth}body{margin:0;min-height:100vh;background:radial-gradient(circle at 78% 6%,rgba(58,139,255,.16),transparent 31%),linear-gradient(145deg,#05080e 0%,#07101d 46%,#04060a 100%);color:var(--text);font:15px/1.65 system-ui,"Yu Gothic UI",Meiryo,sans-serif}.layout{display:grid;grid-template-columns:240px minmax(0,1fr);min-height:100vh}.side{position:sticky;top:0;height:100vh;padding:22px 16px;border-right:1px solid #183454;background:rgba(3,8,15,.78);backdrop-filter:blur(16px)}.brand{display:grid;gap:4px;margin-bottom:22px}.brand b{font-size:20px}.brand span,.muted{color:var(--muted)}.nav{display:grid;gap:8px}.nav a{color:#dfeeff;text-decoration:none;border:1px solid transparent;border-radius:8px;padding:11px 12px;font-weight:900}.nav a:hover,.nav a.active{background:#0f2b4d;border-color:#2d6db0}.main{padding:30px clamp(18px,4vw,46px)}.hero{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:22px;align-items:end;margin-bottom:22px}.hero h1{font-size:clamp(32px,5vw,64px);line-height:1;margin:0 0 12px}.hero p{max-width:780px;color:#c5d7ee;margin:0}.statusBox{border:1px solid var(--line);background:rgba(12,20,34,.9);border-radius:8px;padding:16px;box-shadow:var(--shadow)}.pill{display:inline-flex;align-items:center;gap:8px;border:1px solid #365f8e;background:#0d2138;border-radius:999px;padding:7px 11px;font-weight:900;font-size:12px;color:#dceeff}.dot{width:8px;height:8px;border-radius:50%;background:var(--orange);box-shadow:0 0 16px rgba(255,157,46,.8)}.steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:18px 0}.step{border:1px solid var(--line);background:linear-gradient(180deg,#0d1727,#08101b);border-radius:8px;padding:14px;min-height:112px}.step span{color:#70b6ff;font-size:12px;font-weight:900}.step strong{display:block;font-size:20px;margin-top:8px}.step p{margin:5px 0 0;color:var(--muted);font-size:13px}.grid{display:grid;grid-template-columns:380px minmax(0,1fr);gap:18px}.panel{border:1px solid var(--line);background:rgba(10,17,29,.92);border-radius:8px;padding:18px;box-shadow:var(--shadow)}.panel h2{margin:0 0 12px;font-size:19px}.stack{display:grid;gap:12px}.field label{display:block;color:#b2c4db;font-size:12px;font-weight:900;margin-bottom:6px}.input,.area,.select{width:100%;border:1px solid #385a7e;background:#07101c;color:var(--text);border-radius:8px;padding:12px;font:inherit;outline:none}.input:focus,.area:focus,.select:focus{border-color:#5ba5ff;box-shadow:0 0 0 3px rgba(58,139,255,.18)}.area{min-height:128px;resize:vertical}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.actions{display:flex;gap:10px;flex-wrap:wrap}.btn,button{border:1px solid #f6f9ff;background:#f6f9ff;color:#07101d;border-radius:8px;min-height:42px;padding:10px 14px;font-weight:900;text-decoration:none;cursor:pointer}.secondary{background:#101b2b;color:var(--text);border-color:#3a5878}.danger{background:#2a1018;color:#ffdce3;border-color:#873044}.mini{font-size:12px;color:var(--muted)}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#050911;border:1px solid var(--line);border-radius:8px;padding:14px;min-height:120px;margin:0}.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.card{border:1px solid var(--line);background:#08111e;border-radius:8px;padding:14px}.card span{display:block;color:var(--muted);font-size:12px;font-weight:800}.card strong{display:block;font-size:20px;margin-top:5px}.note{border-left:4px solid var(--blue);background:#0b1727;padding:12px 14px;border-radius:8px;color:#d9e8ff}.console{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:18px}.preview{min-height:360px;position:relative;overflow:hidden;background:linear-gradient(90deg,#f7f8fa 0 50%,#e7e9ed 50% 100%);border:1px solid #30425c;border-radius:8px}.preview::before{content:"コメビュ配置エリア";position:absolute;left:22px;top:22px;color:#475569;font-weight:900}.preview .bubble{position:absolute;right:28px;bottom:40px;width:min(520px,58%);background:#fff;color:#101827;border:3px solid #101827;border-radius:20px;padding:22px;font-size:24px;font-weight:900;line-height:1.45}.preview .bubble::after{content:"";position:absolute;right:70px;bottom:-16px;width:26px;height:26px;background:#fff;border-right:3px solid #101827;border-bottom:3px solid #101827;transform:rotate(45deg)}.avatar{position:absolute;right:70px;bottom:0;width:220px;height:210px;background:linear-gradient(180deg,#111827,#020617);border-radius:120px 120px 20px 20px;border:1px solid #27364d}.avatar::before{content:"イコエルAI";position:absolute;left:36px;top:64px;color:#fff;font-weight:900}.list{display:grid;gap:10px}.item{border:1px solid #203b59;background:#07101c;border-radius:8px;padding:12px}.item strong{display:block}.item span{color:var(--muted);font-size:12px}@media(max-width:980px){.layout,.grid,.hero,.console,.row,.cards,.steps{grid-template-columns:1fr}.side{position:relative;height:auto}.main{padding:22px}.preview .bubble{left:18px;right:18px;width:auto;font-size:18px}.avatar{right:28px;width:160px;height:150px}}
   </style>
 </head>
 <body>
   <div class="layout">
-    <aside class="side">
-      <div class="brand"><b>イコエルAI</b><span>Customer Console</span></div>
-      <nav class="nav">
-        <a class="active" href="#connect">接続</a>
-        <a href="#character">キャラクター</a>
-        <a href="#conversation">会話設計</a>
-        <a href="#learning">学習データ</a>
-        <a href="#delivery">OBS表示</a>
-      </nav>
-    </aside>
+    <aside class="side"><div class="brand"><b>イコエルAI</b><span>Customer Console</span></div><nav class="nav"><a class="active" href="#connect">接続</a><a href="#character">キャラクター</a><a href="#conversation">会話設計</a><a href="#learning">学習データ</a><a href="#delivery">OBS表示</a></nav></aside>
     <main class="main">
-      <section class="hero">
-        <div>
-          <div class="pill"><span class="dot"></span><span id="gateText">顧客API接続待ち</span></div>
-          <h1>何を入れて、何が動くかをここで完結させる。</h1>
-          <p>顧客はJWTを入れて読み込み、キャラの現在設定を見て、プロンプトで軌道修正を依頼する。OBS画面は左側をコメントビュー用に空け、右側にイコエルAIと吹き出しを出す。</p>
-        </div>
-        <div class="statusBox stack">
-          <div><b>API</b><div class="mini" id="apiState">未確認</div></div>
-          <div><b>MODE</b><div class="mini">ONLINE ONLY / NO LOCAL RUNTIME</div></div>
-          <a class="btn secondary" href="./scene.html?demo=1&v=4" target="_blank" rel="noreferrer">OBS画面を開く</a>
-        </div>
-      </section>
-
-      <section class="steps">
-        <div class="step"><span>STEP 1</span><strong>JWTを入れる</strong><p>Supabase Authログイン後のJWTを貼る。</p></div>
-        <div class="step"><span>STEP 2</span><strong>顧客データ読込</strong><p>RLSで許可されたキャラと配信だけ出す。</p></div>
-        <div class="step"><span>STEP 3</span><strong>軌道修正を送る</strong><p>直接破壊せず、変更依頼として蓄積する。</p></div>
-        <div class="step"><span>STEP 4</span><strong>配信に反映</strong><p>承認済み設定をOBSと会話AIへ反映する。</p></div>
-      </section>
-
-      <section class="grid" id="connect">
-        <aside class="panel stack">
-          <h2>接続</h2>
-          <div class="field"><label>顧客API URL</label><input id="api" class="input" value="https://lcnuxfvjownsmqvuagkd.functions.supabase.co/ikoeru-customer-api"></div>
-          <div class="field"><label>Supabase JWT</label><input id="token" class="input" type="password" placeholder="Supabase Authで発行されたJWT"></div>
-          <div class="actions"><button id="health">接続確認</button><button class="secondary" id="loadCustomer">顧客データ読込</button></div>
-          <div class="note">Client Secret、配信キー、Service Role Keyはここに入れない。顧客画面はJWTだけで動かす。</div>
-          <pre id="result">待機中</pre>
-        </aside>
-
-        <section class="stack">
-          <div class="cards" id="character">
-            <div class="card"><span>キャラ名</span><strong id="name">イコエルAI</strong></div>
-            <div class="card"><span>VOICE</span><strong>玄野武宏</strong></div>
-            <div class="card"><span>配信接続</span><strong id="stream">未確認</strong></div>
-          </div>
-
-          <div class="console" id="delivery">
-            <div class="preview">
-              <div class="bubble" id="sampleBubble">リスナーの言葉を拾って、感情を見て、話を横に広げる。</div>
-              <div class="avatar"></div>
-            </div>
-            <div class="panel stack">
-              <h2>読み込んだデータ</h2>
-              <div class="list" id="loadedList"><div class="item"><strong>未読込</strong><span>接続確認後に表示</span></div></div>
-            </div>
-          </div>
-        </section>
-      </section>
-
-      <section class="grid" style="margin-top:18px" id="conversation">
-        <div class="panel stack">
-          <h2>プロンプトで軌道修正</h2>
-          <div class="field"><label>キャラ性・口調・広げ方・禁止事項</label><textarea id="instruction" class="area">イコエルAIは機械的に答えず、コメントの感情を拾って、具体例を足し、最後に自然な質問を一つ返す。冷たい断定を避けて、少し挑発的だが面倒見のいい男性キャラとして話す。</textarea></div>
-          <div class="row">
-            <select id="requestType" class="select">
-              <option value="tone">口調を調整</option>
-              <option value="conversation">会話の広げ方</option>
-              <option value="safety">禁止・注意事項</option>
-              <option value="growth">キャラ成長ルール</option>
-            </select>
-            <button id="sendRequest">変更依頼を送る</button>
-          </div>
-          <pre id="proposal">JWT接続後、変更依頼を送信できる。</pre>
-        </div>
-
-        <div class="panel stack" id="learning">
-          <h2>学習・収益化データ</h2>
-          <p class="muted">価値のある会話ログは目的別に許可を分けて保存する。外部提供とAI学習は顧客同意があるものだけ扱う。</p>
-          <div class="actions">
-            <button class="secondary" data-purpose="service_improvement">品質改善を許可</button>
-            <button class="secondary" data-purpose="model_training">AI学習を許可</button>
-            <button class="secondary" data-purpose="external_data_sales">外部提供を許可</button>
-          </div>
-          <pre id="permission">未保存</pre>
-        </div>
-      </section>
+      <section class="hero"><div><div class="pill"><span class="dot"></span><span id="gateText">顧客API接続待ち</span></div><h1>何を入れて、何が動くかをここで完結させる。</h1><p>顧客はJWTを入れて読み込み、キャラの現在設定を見て、プロンプトで軌道修正を依頼する。OBS画面は左側をコメントビュー用に空け、右側にイコエルAIと吹き出しを出す。</p></div><div class="statusBox stack"><div><b>API</b><div class="mini" id="apiState">未確認</div></div><div><b>MODE</b><div class="mini">ONLINE ONLY / NO LOCAL RUNTIME</div></div><a class="btn secondary" href="./scene.html?demo=1&v=5" target="_blank" rel="noreferrer">OBS画面を開く</a></div></section>
+      <section class="steps"><div class="step"><span>STEP 1</span><strong>JWTを入れる</strong><p>Supabase Authログイン後のJWTを貼る。</p></div><div class="step"><span>STEP 2</span><strong>顧客データ読込</strong><p>RLSで許可されたキャラと配信だけ出す。</p></div><div class="step"><span>STEP 3</span><strong>軌道修正を送る</strong><p>直接破壊せず、変更依頼として蓄積する。</p></div><div class="step"><span>STEP 4</span><strong>配信に反映</strong><p>承認済み設定をOBSと会話AIへ反映する。</p></div></section>
+      <section class="grid" id="connect"><aside class="panel stack"><h2>接続</h2><div class="field"><label>顧客API URL</label><input id="api" class="input" value="https://lcnuxfvjownsmqvuagkd.functions.supabase.co/ikoeru-customer-api"></div><div class="field"><label>Supabase JWT</label><input id="token" class="input" type="password" placeholder="Supabase Authで発行されたJWT"></div><div class="actions"><button id="health">接続確認</button><button class="secondary" id="loadCustomer">顧客データ読込</button></div><div class="note">Client Secret、配信キー、Service Role Keyはここに入れない。顧客画面はJWTだけで動かす。</div><pre id="result">待機中</pre></aside><section class="stack"><div class="cards" id="character"><div class="card"><span>キャラ名</span><strong id="name">イコエルAI</strong></div><div class="card"><span>VOICE</span><strong>玄野武宏</strong></div><div class="card"><span>配信接続</span><strong id="stream">未確認</strong></div></div><div class="console" id="delivery"><div class="preview"><div class="bubble" id="sampleBubble">リスナーの言葉を拾って、感情を見て、話を横に広げる。</div><div class="avatar"></div></div><div class="panel stack"><h2>読み込んだデータ</h2><div class="list" id="loadedList"><div class="item"><strong>未読込</strong><span>接続確認後に表示</span></div></div></div></div></section></section>
+      <section class="grid" style="margin-top:18px" id="conversation"><div class="panel stack"><h2>プロンプトで軌道修正</h2><div class="field"><label>キャラ性・口調・広げ方・禁止事項</label><textarea id="instruction" class="area">イコエルAIは機械的に答えず、コメントの感情を拾って、具体例を足し、最後に自然な質問を一つ返す。冷たい断定を避けて、少し挑発的だが面倒見のいい男性キャラとして話す。</textarea></div><div class="row"><select id="requestType" class="select"><option value="tone">口調を調整</option><option value="conversation">会話の広げ方</option><option value="safety">禁止・注意事項</option><option value="growth">キャラ成長ルール</option></select><button id="sendRequest">変更依頼を送る</button></div><pre id="proposal">JWT接続後、変更依頼を送信できる。</pre></div><div class="panel stack" id="learning"><h2>学習・収益化データ</h2><p class="muted">価値のある会話ログは目的別に許可を分けて保存する。外部提供とAI学習は顧客同意があるものだけ扱う。</p><div class="actions"><button class="secondary" data-purpose="service_improvement" data-allowed="true">品質改善を許可</button><button class="danger" data-purpose="service_improvement" data-allowed="false">品質改善を撤回</button><button class="secondary" data-purpose="model_training" data-allowed="true">AI学習を許可</button><button class="danger" data-purpose="model_training" data-allowed="false">AI学習を撤回</button><button class="secondary" data-purpose="external_data_sales" data-allowed="true">外部提供を許可</button><button class="danger" data-purpose="external_data_sales" data-allowed="false">外部提供を撤回</button></div><pre id="permission">未保存</pre></div></section>
     </main>
   </div>
 <script>
@@ -109,8 +27,8 @@ async function call(path,opt={}){const res=await fetch(base()+path,{...opt,heade
 function renderLoaded(){const rows=[];state.memberships.forEach(m=>rows.push(`<div class="item"><strong>所属テナント</strong><span>${m.tenant_id} / ${m.role||'member'}</span></div>`));state.characters.forEach(c=>rows.push(`<div class="item"><strong>${c.name||'キャラクター'}</strong><span>version ${c.version||'-'} / ${c.status||'active'}</span></div>`));state.streams.forEach(s=>rows.push(`<div class="item"><strong>${s.platform||'stream'}: ${s.channel_id||s.id}</strong><span>${s.status||'unknown'}</span></div>`));$('loadedList').innerHTML=rows.join('')||'<div class="item"><strong>データなし</strong><span>JWTの所属テナントを確認</span></div>';const first=state.characters[0];if(first){$('name').textContent=first.name||'イコエルAI';$('sampleBubble').textContent=(first.conversation_style||first.prompt||'リスナーの言葉を拾って、感情を見て、話を横に広げる。').slice(0,94)}const stream=state.streams[0];$('stream').textContent=stream?(stream.status||'確認済み'):'未確認'}
 $('health').onclick=async()=>{try{const data=await call('/api/health');state.memberships=data.memberships||[];$('apiState').textContent='接続OK';$('gateText').textContent='顧客API接続済み';$('result').textContent=JSON.stringify(data,null,2);renderLoaded()}catch(e){$('apiState').textContent='接続失敗';$('result').textContent='接続失敗: '+e.message+'\nJWTが未入力、期限切れ、またはtenant_users未登録の可能性があります。'}};
 $('loadCustomer').onclick=async()=>{try{const [characters,streams]=await Promise.all([call('/api/customer/characters'),call('/api/customer/streams')]);state.characters=characters.characters||[];state.streams=streams.streams||[];$('result').textContent=JSON.stringify({characters:state.characters,streams:state.streams},null,2);renderLoaded()}catch(e){$('result').textContent='読込失敗: '+e.message+'\nSupabase AuthのJWTとtenant_users登録を確認。'}};
-$('sendRequest').onclick=async()=>{const character=state.characters[0];const body={character_id:character?.id||null,type:$('requestType').value,instruction:$('instruction').value};try{const data=await call('/api/customer/change-requests',{method:'POST',body:JSON.stringify(body)});$('proposal').textContent=JSON.stringify(data,null,2)}catch(e){$('proposal').textContent='送信失敗: '+e.message+'\nまだ変更依頼APIが未公開の場合は、管理側で承認フローを追加する必要があります。'}};
-document.querySelectorAll('[data-purpose]').forEach(btn=>btn.onclick=async()=>{try{const data=await call('/api/customer/training-permissions',{method:'POST',body:JSON.stringify({purpose:btn.dataset.purpose,allowed:true,evidence:'customer_console'})});$('permission').textContent=JSON.stringify(data,null,2)}catch(e){$('permission').textContent='保存失敗: '+e.message+'\n許可保存APIが未公開、またはJWT権限不足です。'}});
+$('sendRequest').onclick=async()=>{const character=state.characters[0];const body={character_id:character?.id||null,type:$('requestType').value,instruction:$('instruction').value};try{const data=await call('/api/customer/change-requests',{method:'POST',body:JSON.stringify(body)});$('proposal').textContent=JSON.stringify(data,null,2)}catch(e){$('proposal').textContent='送信失敗: '+e.message}};
+document.querySelectorAll('[data-purpose]').forEach(btn=>btn.onclick=async()=>{const allowed=btn.dataset.allowed==='true';try{const data=await call('/api/customer/training-permissions',{method:'POST',body:JSON.stringify({purpose:btn.dataset.purpose,allowed,evidence:allowed?'customer_console_allow':'customer_console_revoke'})});$('permission').textContent=JSON.stringify(data,null,2)}catch(e){$('permission').textContent='保存失敗: '+e.message+'\nJWT権限不足、またはAPI未公開の可能性があります。'}});
 </script>
 </body>
 </html>
