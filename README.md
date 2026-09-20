@@ -1,25 +1,21 @@
 # Ikoeru AI Online Studio
 
-イコエルAIをオンライン配信システムにするための作業場所。
+イコエルAIをオンライン配信システムにするためのリポジトリ。
 
 ローカル運用は対象外。ここから先はオンラインだけで進める。
 
-## 今できていること
+## 入口URL
 
-- 管理画面URLの土台: https://ura-news.github.io/stream-op-git/online/index.html?v=3
-- OBS画面URLの土台: https://ura-news.github.io/stream-op-git/online/scene.html?demo=1&v=3
-- Node/Express APIコード: `online/backend/`
-- TwitCasting取得処理: `online/backend/src/twitcasting.js`
-- AI返答生成処理: `online/backend/src/llm.js`
-- イコエルAIの会話方針: `online/backend/src/reply-policy.js`
-- TTS処理: `online/backend/src/tts.js`
-- Supabase DBスキーマ: `online/supabase-schema.sql`
-- 初期データSQL: `online/seed-ikoeru.sql`
-- Render設定: `online/backend/render.yaml`
-- Dockerfile: `online/backend/Dockerfile`
-- CI: `.github/workflows/online-backend.yml`
+- 管理画面の土台: https://ura-news.github.io/stream-op-git/online/index.html?v=3
+- OBS画面の土台: https://ura-news.github.io/stream-op-git/online/scene.html?demo=1&v=3
 
-## 実際に完了したオンライン作業
+## 今の状態
+
+まだ完成品ではない。
+
+画面はオンラインで開ける。SupabaseのDBも作成済み。ただし、コメント取得・AI返答・音声生成を動かすAPIサーバーがまだネットにデプロイされていないため、管理画面に実API URLを入れても本番動作はしない。
+
+## 完了済み
 
 - 既存Supabaseプロジェクト `Tool` を使用。
 - Project ref: `lcnuxfvjownsmqvuagkd`
@@ -27,14 +23,17 @@
 - tenant `ikoeru-ai` 作成済み。
 - character `イコエルAI` 作成済み。
 - stream `twitcasting / l_xxx999` 作成済み。
+- Node/Express APIコード作成済み。
+- TwitCastingコメント取得コード作成済み。
+- AI返答生成コード作成済み。
+- イコエルAIの会話方針作成済み。
+- TTS接続コード作成済み。
+- 管理系APIとジョブAPIをトークン保護済み。
+- Render用設定作成済み。
+- Dockerfile作成済み。
+- GitHub Actions構文チェック作成済み。
 
-## まだ動かない理由
-
-APIサーバーがまだネットにデプロイされていない。
-
-管理画面とOBS画面は表示できるが、裏側のAPI URLが未接続なので、ツイキャスコメント取得、AI返答、音声生成はまだ実行されない。
-
-## 次にやること
+## まだ必要
 
 1. RenderまたはRailwayに `online/backend` をデプロイする。
 2. ホスティング環境変数に秘密キーを入れる。
@@ -42,11 +41,16 @@ APIサーバーがまだネットにデプロイされていない。
 4. 管理画面にAPI URLを入れる。
 5. TwitCasting接続テストをする。
 6. OBSに `online/scene.html` を入れて実配信テストする。
+7. 顧客用管理画面と納品キット作成フローを実装する。
+8. 学習・収益化用データの同意UI、エクスポート、監査ログを完成させる。
 
-## 必要な秘密情報
+## GitHubに入れない秘密情報
 
-GitHubには入れない。Render/Railway/Supabaseなどの環境変数へ入れる。
+Render/Railway/Supabaseなどの環境変数へ入れる。
 
+- `ADMIN_API_TOKEN`
+- `JOB_TOKEN`
+- `SCENE_READ_TOKEN`
 - `SUPABASE_URL`
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `TWITCASTING_CLIENT_ID`
@@ -65,3 +69,4 @@ GitHubには入れない。Render/Railway/Supabaseなどの環境変数へ入れ
 - 左側は外部コメントビューア用に空いている。
 - 緊急停止できる。
 - 顧客ごとにキャラとデータを分けられる。
+- 学習・外部提供は同意済みデータだけに限定される。
