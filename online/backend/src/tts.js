@@ -1,7 +1,13 @@
 export async function synthesizeSpeech(text) {
   const provider = process.env.TTS_PROVIDER || '';
+  if (!provider) throw new Error('tts_not_configured');
+
+  if (provider === 'none') {
+    return { audio_url: null, duration_ms: Math.max(2200, Math.min(12000, text.length * 130)), provider: 'none' };
+  }
+
   const apiKey = process.env.TTS_API_KEY || '';
-  if (!provider || !apiKey) throw new Error('tts_not_configured');
+  if (!apiKey) throw new Error('tts_api_key_missing');
 
   if (provider === 'voicevox-proxy') {
     const baseUrl = process.env.TTS_BASE_URL || '';
@@ -13,10 +19,6 @@ export async function synthesizeSpeech(text) {
     });
     if (!response.ok) throw new Error(`tts_http_${response.status}`);
     return response.json();
-  }
-
-  if (provider === 'none') {
-    return { audio_url: null, duration_ms: Math.max(2200, Math.min(12000, text.length * 130)), provider: 'none' };
   }
 
   throw new Error('unsupported_tts_provider');
