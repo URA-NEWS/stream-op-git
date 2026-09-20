@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>イコエルAI Online Control</title>
+  <style>
+    :root{color-scheme:dark;--bg:#070a10;--panel:#0f1724;--panel2:#141f31;--line:#263754;--text:#f5f8ff;--muted:#8ea0ba;--blue:#3988ff;--green:#25d69f;--red:#ff4d68;--amber:#ffc05a}*{box-sizing:border-box;letter-spacing:0}body{margin:0;background:radial-gradient(circle at 82% -8%,rgba(57,136,255,.24),transparent 30%),linear-gradient(180deg,#0b111c,#070a10 42%);color:var(--text);font:14px/1.6 system-ui,"Yu Gothic UI",Meiryo,sans-serif}.app{display:grid;grid-template-columns:240px minmax(0,1fr);min-height:100vh}.rail{background:linear-gradient(180deg,#05070b,#0b111c);border-right:1px solid #1d2a40;padding:28px 18px;position:sticky;top:0;height:100vh}.brand{display:flex;gap:12px;align-items:center;font-size:20px;font-weight:900}.logo{width:38px;height:38px;border-radius:8px;background:var(--blue);display:grid;place-items:center;box-shadow:0 0 28px rgba(57,136,255,.42)}.brand small{display:block;color:var(--muted);font-size:10px;font-weight:600}.nav{display:grid;gap:8px;margin-top:42px}.nav button{border:1px solid transparent;background:transparent;color:#a9b7cc;border-radius:8px;min-height:44px;text-align:left;padding:10px 12px;font:inherit;font-weight:750}.nav button.active{background:#102642;color:white;border-color:#2f74df}.nav button:hover{background:#131f31;color:white}.main{min-width:0}.top{height:76px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;padding:0 32px;background:rgba(7,10,16,.74);backdrop-filter:blur(14px)}.badge{display:inline-flex;align-items:center;gap:7px;font-size:11px;color:#9fc8ff;font-weight:900}.badge:before{content:"";width:7px;height:7px;background:var(--green);border-radius:50%;box-shadow:0 0 12px var(--green)}main{padding:34px;max-width:1480px;margin:auto}.hero{display:flex;justify-content:space-between;gap:20px;align-items:end;margin-bottom:28px}.eyebrow{font-size:11px;color:#76adff;font-weight:900}.hero h1{font-size:34px;margin:4px 0 0}.hero p{margin:6px 0 0;color:var(--muted)}.pill{border:1px solid #284d80;background:#0f1a2a;border-radius:6px;padding:8px 12px;color:#cfe2ff;font-size:12px;font-weight:800}.metrics,.brief{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid var(--line);background:var(--panel);margin-bottom:18px}.brief{grid-template-columns:repeat(3,minmax(0,1fr));background:#203451;gap:1px}.metric,.brief div{padding:20px;border-right:1px solid var(--line);min-width:0}.metric:last-child{border-right:0}.brief div{background:linear-gradient(180deg,#111a28,#0d141f);border-right:0}.metric span,.brief span{display:block;color:var(--muted);font-size:11px}.brief span{text-transform:uppercase;color:#6fa8ff;font-weight:900}.metric strong{display:block;font-size:24px;margin-top:7px}.brief strong{display:block;font-size:19px;margin-top:7px}.metric small,.brief small{display:block;color:var(--muted);font-size:11px;margin-top:4px}.grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:30px}.section{border-bottom:1px solid var(--line);padding:26px 0}.section:first-child{padding-top:0}.section h2{font-size:18px;margin:0 0 16px}.textarea{width:100%;min-height:145px;border:1px solid #344761;border-radius:8px;background:#0d141f;color:var(--text);padding:16px;font:inherit;resize:vertical}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}button,.link{border:1px solid #f5f8ff;border-radius:8px;background:#f5f8ff;color:#07101d;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:10px 16px;font-weight:900;cursor:pointer}.secondary{background:#101722;color:var(--text);border-color:#344761}.danger{background:#2a1018;color:white;border-color:#823044}.portrait{border:1px solid #203451;border-radius:8px;background:#05070b;min-height:380px;display:grid;place-items:end center;overflow:hidden}.portrait img{max-width:100%;max-height:380px;object-fit:contain}.runtime{margin-top:16px;border-top:1px solid var(--line)}.row{display:flex;justify-content:space-between;gap:10px;padding:12px 0;border-bottom:1px solid var(--line);font-size:12px}.row span{color:var(--muted)}.todo{display:grid;gap:8px}.todo label{display:flex;gap:10px;align-items:start;color:#dce7f8}.todo input{margin-top:5px}.note{color:var(--muted);font-size:12px}.ok{color:var(--green)}.warn{color:var(--amber)}.bad{color:var(--red)}@media(max-width:900px){.app{grid-template-columns:1fr}.rail{height:auto;position:static}.nav{display:flex;overflow:auto;margin-top:18px}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.brief,.grid{grid-template-columns:1fr}.top{padding:0 18px}main{padding:22px}.hero{align-items:start}.pill{display:none}}@media(max-width:520px){.metrics{grid-template-columns:1fr}.hero h1{font-size:28px}.metric{border-right:0;border-bottom:1px solid var(--line)}}
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside class="rail">
+    <div class="brand"><div class="logo">AI</div><div>IKOERU<small>ONLINE LIVE STUDIO</small></div></div>
+    <div class="nav" aria-label="online navigation">
+      <button class="active">概要</button><button>キャラクター</button><button>会話設計</button><button>配信接続</button><button>学習データ</button><button>納品キット</button>
+    </div>
+  </aside>
+  <div class="main">
+    <header class="top"><div>Workspace / <strong>Online Control</strong></div><div class="badge">ONLINE ONLY</div></header>
+    <main>
+      <section class="hero"><div><div class="eyebrow">CHARACTER STUDIO / ONLINE</div><h1>イコエルAI</h1><p>ツイキャス連携、キャラ成長、OBS表示、顧客納品をオンラインで統合する管理画面。</p></div><div class="pill">NO LOCAL RUNTIME</div></section>
+      <section class="metrics" aria-label="status metrics">
+        <div class="metric"><span>配信接続</span><strong class="warn">未接続</strong><small>TwitCasting secrets required</small></div>
+        <div class="metric"><span>会話AI</span><strong class="warn">未設定</strong><small>LLM provider required</small></div>
+        <div class="metric"><span>VOICE</span><strong>玄野武宏</strong><small>TTS backend required</small></div>
+        <div class="metric"><span>データ</span><strong>Supabase</strong><small>schema draft ready</small></div>
+      </section>
+      <section class="brief" aria-label="next gates">
+        <div><span>Next Gate</span><strong>Supabase作成</strong><small>DB/Auth/Storage</small></div>
+        <div><span>Deploy Target</span><strong>Render / Railway</strong><small>free vs stable decision</small></div>
+        <div><span>OBS URL</span><strong><a class="note" href="./scene.html">scene.html</a></strong><small>right-side avatar layout</small></div>
+      </section>
+      <section class="grid">
+        <div>
+          <div class="section"><h2>キャラ調整プロンプト</h2><textarea class="textarea" placeholder="例: もっとリスナーの話を横展開して、質問が必要な時だけ短く聞く。設定は崩さない。"></textarea><div class="actions"><button>変更案を作成</button><button class="secondary">履歴を見る</button><button class="danger">緊急停止</button></div><p class="note">この画面はオンラインUIの土台。実API接続後にSupabaseへ保存し、OBSシーンへ反映する。</p></div>
+          <div class="section"><h2>オンライン完了タスク</h2><div class="todo">
+            <label><input type="checkbox" checked> GitHubにオンライン移行計画を追加</label>
+            <label><input type="checkbox" checked> Supabaseスキーマ案を追加</label>
+            <label><input type="checkbox" checked> API契約を追加</label>
+            <label><input type="checkbox"> Supabaseプロジェクト作成</label>
+            <label><input type="checkbox"> Render/RailwayへAPIデプロイ</label>
+            <label><input type="checkbox"> TwitCasting実接続</label>
+            <label><input type="checkbox"> LLM/TTSオンライン実装</label>
+            <label><input type="checkbox"> OBS実配信テスト</label>
+          </div></div>
+        </div>
+        <aside>
+          <div class="portrait"><img src="./eru-promo.png" alt="イコエルAI preview"></div>
+          <div class="runtime">
+            <div class="row"><span>Character</span><strong>イコエルAI</strong></div>
+            <div class="row"><span>Voice</span><strong>玄野武宏</strong></div>
+            <div class="row"><span>Layout</span><strong>右側表示</strong></div>
+            <div class="row"><span>Comment View</span><strong>左側空白</strong></div>
+          </div>
+        </aside>
+      </section>
+    </main>
+  </div>
+</div>
+</body>
+</html>
