@@ -60,16 +60,20 @@ create table if not exists comments (
 
 create table if not exists replies (
   id uuid primary key default gen_random_uuid(),
+  stream_id uuid not null references streams(id) on delete cascade,
   comment_id uuid not null references comments(id) on delete cascade,
   character_id uuid not null references characters(id) on delete cascade,
   reply text not null,
   audio_url text,
   model text,
   tts_voice text,
-  status text not null default 'queued',
+  status text not null default 'queued' check (status in ('queued', 'delivered', 'skipped', 'failed')),
   quality_score integer,
+  delivered_at timestamptz,
   created_at timestamptz not null default now()
 );
+
+create index if not exists replies_scene_queue_idx on replies(stream_id, status, created_at);
 
 create table if not exists feedback (
   id uuid primary key default gen_random_uuid(),
