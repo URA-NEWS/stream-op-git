@@ -22,6 +22,7 @@ jobs:
         with:
           node-version: '22'
       - run: npm install
+      - run: node --check src/auth.js
       - run: node --check src/server.js
       - run: node --check src/twitcasting.js
       - run: node --check src/llm.js
