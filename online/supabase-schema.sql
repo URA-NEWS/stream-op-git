@@ -46,6 +46,22 @@ create table if not exists character_versions (
   unique(character_id, version)
 );
 
+create table if not exists character_change_requests (
+  id uuid primary key default gen_random_uuid(),
+  tenant_id uuid not null references tenants(id) on delete cascade,
+  character_id uuid references characters(id) on delete set null,
+  requested_by uuid not null,
+  request_type text not null check (request_type in ('tone', 'conversation', 'safety', 'growth', 'other')),
+  instruction text not null check (char_length(instruction) between 1 and 6000),
+  status text not null default 'pending' check (status in ('pending', 'approved', 'rejected', 'applied')),
+  review_note text,
+  created_at timestamptz not null default now(),
+  reviewed_at timestamptz
+);
+
+create index if not exists character_change_requests_tenant_idx on character_change_requests(tenant_id, created_at desc);
+create index if not exists character_change_requests_character_idx on character_change_requests(character_id, created_at desc);
+
 create table if not exists streams (
   id uuid primary key default gen_random_uuid(),
   tenant_id uuid not null references tenants(id) on delete cascade,
@@ -139,6 +155,7 @@ alter table tenants enable row level security;
 alter table tenant_users enable row level security;
 alter table characters enable row level security;
 alter table character_versions enable row level security;
+alter table character_change_requests enable row level security;
 alter table streams enable row level security;
 alter table comments enable row level security;
 alter table replies enable row level security;
@@ -146,3 +163,12 @@ alter table feedback enable row level security;
 alter table training_permissions enable row level security;
 alter table access_tokens enable row level security;
 alter table audit_logs enable row level security;
+
+create policy if not exists tenant_users_self_select on tenant_users for select using (user_id = auth.uid());
+create policy if not exists tenants_member_select on tenants for select using (exists (select 1 from tenant_users tu where tu.tenant_id = tenants.id and tu.user_id = auth.uid()));
+create policy if not exists characters_member_select on characters for select using (exists (select 1 from tenant_users tu where tu.tenant_id = characters.tenant_id and tu.user_id = auth.uid()));
+create policy if not exists streams_member_select on streams for select using (exists (select 1 from tenant_users tu where tu.tenant_id = streams.tenant_id and tu.user_id = auth.uid()));
+create policy if not exists training_permissions_member_select on training_permissions for select using (exists (select 1 from tenant_users tu where tu.tenant_id = training_permissions.tenant_id and tu.user_id = auth.uid()));
+create policy if not exists training_permissions_member_insert on training_permissions for insert with check (exists (select 1 from tenant_users tu where tu.tenant_id = training_permissions.tenant_id and tu.user_id = auth.uid() and tu.role in ('owner', 'operator')));
+create policy if not exists character_change_requests_member_select on character_change_requests for select using (exists (select 1 from tenant_users tu where tu.tenant_id = character_change_requests.tenant_id and tu.user_id = auth.uid()));
+create policy if not exists character_change_requests_member_insert on character_change_requests for insert with check (requested_by = auth.uid() and exists (select 1 from tenant_users tu where tu.tenant_id = character_change_requests.tenant_id and tu.user_id = auth.uid()) and (character_id is null or exists (select 1 from characters c where c.id = character_change_requests.character_id and c.tenant_id = character_change_requests.tenant_id)));
