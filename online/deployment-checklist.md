@@ -8,7 +8,7 @@
 - Ikoeru tenant created: `ikoeru-ai`
 - First stream target: `twitcasting / l_xxx999`
 - Secrets are not stored in GitHub.
-- Owner dashboard, customer console, kit builder, and OBS scene are online on GitHub Pages.
+- Owner dashboard, customer console, review console, kit builder, and OBS scene are online on GitHub Pages.
 - Secure Supabase Edge Function is deployed with JWT verification enabled.
 - Customer Supabase Edge Function is deployed with JWT verification enabled.
 - Tenant-scoped access token table exists for admin/job/scene authorization.
@@ -18,10 +18,11 @@
 
 ## Online URLs
 
-- Owner dashboard: https://ura-news.github.io/stream-op-git/online/index.html?v=4
+- Owner dashboard: https://ura-news.github.io/stream-op-git/online/index.html?v=5
 - Customer console: https://ura-news.github.io/stream-op-git/online/customer.html?v=2
+- Change request review: https://ura-news.github.io/stream-op-git/online/review.html
 - Kit builder: https://ura-news.github.io/stream-op-git/online/kits.html
-- OBS scene: https://ura-news.github.io/stream-op-git/online/scene.html?demo=1&v=4
+- OBS scene: https://ura-news.github.io/stream-op-git/online/scene.html?demo=1&v=5
 - Secure Supabase Edge API: https://lcnuxfvjownsmqvuagkd.functions.supabase.co/ikoeru-secure
 - Customer Supabase Edge API: https://lcnuxfvjownsmqvuagkd.functions.supabase.co/ikoeru-customer-api
 
@@ -69,11 +70,14 @@
 
 - [x] Owner dashboard static URL.
 - [x] Customer dashboard URL.
+- [x] Change request review URL.
 - [x] Kit builder URL.
 - [x] OBS scene static URL.
 - [x] Customer dashboard explains required JWT and flow.
 - [x] Customer dashboard calls JWT customer API.
+- [x] Review dashboard calls JWT customer API.
 - [x] OBS scene can receive API URL, stream ID, and scene token.
+- [x] OBS avatar path uses GitHub Pages absolute path with raw fallback.
 - [ ] Connect owner dashboard to deployed admin API URL.
 - [ ] Access control verified against deployed API with a real user.
 - [ ] Emergency stop verified against deployed API.
@@ -86,6 +90,7 @@
 - [x] Speech bubble does not cover left comment viewer.
 - [x] Blink/lip-sync hooks implemented.
 - [x] Audio URL playback implemented.
+- [x] Harden avatar loading path and fallback display.
 - [ ] Confirm avatar image renders after GitHub Pages cache refresh.
 - [ ] Confirm emergency stop clears speech/audio through deployed API.
 
