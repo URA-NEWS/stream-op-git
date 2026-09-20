@@ -17,6 +17,7 @@
 - Customer change request approval/apply route exists.
 - Customer training-permission storage route exists.
 - Consent-gated data export request route exists.
+- Retention policy route and export audit route exist.
 
 ## Online URLs
 
@@ -46,6 +47,8 @@
 - [x] Add approval/apply workflow from `character_change_requests` to `characters`.
 - [x] Add character snapshot policy for `character_versions`.
 - [x] Add `data_exports` table and consent-gated insert policy.
+- [x] Add `data_retention_policies` table and RLS.
+- [x] Add `export_audit_events` table and RLS.
 - [ ] Create storage bucket for generated voice audio and avatar assets.
 - [ ] Configure backups.
 
@@ -65,6 +68,8 @@
 - [x] Customer change request apply/reject route exists.
 - [x] Customer training permission route exists.
 - [x] Customer data export request route exists.
+- [x] Customer retention policy route exists.
+- [x] Customer export audit route exists.
 - [ ] Public OBS/job API created with token scope lookup.
 - [ ] Set environment variables/secrets.
 - [ ] Verify `/api/health` with an actual Supabase Auth user JWT.
@@ -86,6 +91,8 @@
 - [x] Review dashboard calls JWT customer API.
 - [x] Review dashboard has apply/reject controls.
 - [x] Data console creates consent-gated export requests.
+- [x] Data console manages retention policies.
+- [x] Data console shows export audit events.
 - [x] OBS scene can receive API URL, stream ID, and scene token.
 - [x] OBS avatar path uses GitHub Pages absolute path with raw fallback.
 - [ ] Connect owner dashboard to deployed admin API URL.
@@ -125,10 +132,10 @@
 - [x] External data sales consent can be saved separately.
 - [x] Data export requests are tenant-scoped.
 - [x] Data export requests require matching active consent.
-- [ ] Retention period visible.
+- [x] Retention period visible and configurable.
+- [x] Data export request audit records operator, time, purpose.
 - [ ] Revocation removes future exports.
 - [ ] Completed export files are stored in a private bucket.
-- [ ] Audit log records export operator, time, purpose.
 
 ## Completion definition
 
