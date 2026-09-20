@@ -10,11 +10,11 @@
 </head>
 <body>
 <div class="app">
-  <aside class="rail"><div class="brand"><div class="logo">AI</div><div>IKOERU<small>ONLINE STUDIO</small></div></div><nav class="nav"><a class="active" href="./index.html?v=5">概要</a><a href="./customer.html?v=2">ユーザー管理</a><a href="./kits.html">納品キット</a><a href="./scene.html?demo=1&v=4">OBS</a></nav></aside>
+  <aside class="rail"><div class="brand"><div class="logo">AI</div><div>IKOERU<small>ONLINE STUDIO</small></div></div><nav class="nav"><a class="active" href="./index.html?v=5">概要</a><a href="./customer.html?v=2">ユーザー管理</a><a href="./kits.html">納品キット</a><a href="./scene.html?demo=1&v=5">OBS</a></nav></aside>
   <div>
     <header class="top"><div>イコエルAI / <strong>オンライン管理</strong></div><div class="pill">NO LOCAL RUNTIME</div></header>
     <main>
-      <section class="hero"><div><h1>今の目的は、配信キットをネット上で納品できる状態にすること。</h1><p>画面、DB、顧客APIはオンライン済み。次は本番APIサーバーに秘密情報を入れて、ツイキャスコメント取得、AI返答、TTS、OBS配信イベントを通す。</p></div><a class="link secondary" href="./scene.html?demo=1&v=4">OBS画面を見る</a></section>
+      <section class="hero"><div><h1>今の目的は、配信キットをネット上で納品できる状態にすること。</h1><p>画面、DB、顧客APIはオンライン済み。次は本番APIサーバーに秘密情報を入れて、ツイキャスコメント取得、AI返答、TTS、OBS配信イベントを通す。</p></div><a class="link secondary" href="./scene.html?demo=1&v=5">OBS画面を見る</a></section>
       <section class="notice"><strong>この画面の意味</strong>ここは全体の司令塔。顧客用はJWTで安全に管理し、配信処理はRender/RailwayなどのAPIサーバーに分ける。</section>
       <section class="cards">
         <div class="card"><span>公開画面</span><strong class="ok">公開済み</strong></div>
@@ -26,9 +26,9 @@
         <div>
           <div class="section"><h2>迷ったらこの順番</h2><div class="steps"><div class="step"><div class="num">1</div><div><strong>顧客管理はSupabase JWTで使う</strong><small>ユーザー管理画面へJWTを入れると、RLSで許可されたキャラと配信だけを読み込む。</small></div></div><div class="step"><div class="num">2</div><div><strong>配信APIをRenderかRailwayへデプロイ</strong><small>GitHubの `online/backend` を使う。TwitCasting、LLM、TTSの秘密キーはホスティングの環境変数へ入れる。</small></div></div><div class="step"><div class="num">3</div><div><strong>API URLをここで確認</strong><small>`/api/health` が返れば、コメント取得と返答生成のテストへ進める。</small></div></div><div class="step"><div class="num">4</div><div><strong>OBS URLを配信ソフトへ入れる</strong><small>左側は外部コメビュ、右側にイコエルAI。瞬き、口パク、吹き出しに対応。</small></div></div></div></div>
           <div class="section"><h2>API URL確認</h2><input class="input" id="apiBase" placeholder="https://your-api.example.com"><div class="actions"><button id="saveApi">保存</button><button class="secondary" id="checkHealth">Health確認</button><button class="secondary" id="checkCustomer">顧客API確認</button></div><pre id="healthResult">配信API URLは未設定。顧客APIはボタンで確認できる。</pre></div>
-          <div class="section"><h2>操作画面</h2><div class="links"><a class="link secondary" href="./customer.html?v=2">ユーザー管理を開く</a><a class="link secondary" href="./kits.html">納品キットを作る</a><a class="link secondary" href="./scene.html?demo=1&v=4">OBSデモを開く</a><a class="link secondary" href="https://render.com/deploy?repo=https://github.com/URA-NEWS/stream-op-git">Renderへデプロイ</a></div></div>
+          <div class="section"><h2>操作画面</h2><div class="links"><a class="link secondary" href="./customer.html?v=2">ユーザー管理を開く</a><a class="link secondary" href="./kits.html">納品キットを作る</a><a class="link secondary" href="./scene.html?demo=1&v=5">OBSデモを開く</a><a class="link secondary" href="https://render.com/deploy?repo=https://github.com/URA-NEWS/stream-op-git">Renderへデプロイ</a></div></div>
         </div>
-        <aside><div class="portrait"><img src="../eru-promo.png" alt="イコエルAI preview"></div><div class="runtime"><div class="row"><span>名前</span><strong>イコエルAI</strong></div><div class="row"><span>声</span><strong>玄野武宏</strong></div><div class="row"><span>配置</span><strong>右側</strong></div><div class="row"><span>左側</span><strong>コメビュ用に空ける</strong></div><div class="row"><span>顧客API</span><strong>JWT必須</strong></div></div></aside>
+        <aside><div class="portrait"><img src="/stream-op-git/eru-promo.png" alt="イコエルAI preview"></div><div class="runtime"><div class="row"><span>名前</span><strong>イコエルAI</strong></div><div class="row"><span>声</span><strong>玄野武宏</strong></div><div class="row"><span>配置</span><strong>右側</strong></div><div class="row"><span>左側</span><strong>コメビュ用に空ける</strong></div><div class="row"><span>顧客API</span><strong>JWT必須</strong></div></div></aside>
       </section>
     </main>
   </div>
