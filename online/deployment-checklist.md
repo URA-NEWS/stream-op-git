@@ -8,6 +8,7 @@
 - Ikoeru tenant created: `ikoeru-ai`
 - First stream target: `twitcasting / l_xxx999`
 - Secrets are not stored in GitHub.
+- Backend API code is prepared but not deployed to a public runtime yet.
 
 ## Provider decision
 
@@ -28,15 +29,19 @@ Choose one before API deployment:
 
 ## Secrets to configure in hosting provider
 
-- AUTH_SECRET
-- SUPABASE_URL
-- SUPABASE_SERVICE_ROLE_KEY
-- TWITCASTING_CLIENT_ID
-- TWITCASTING_CLIENT_SECRET
-- LLM_API_KEY
-- TTS_API_KEY
-- PUBLIC_BASIC_AUTH_PASSWORD
-- BACKUP_ENCRYPTION_KEY
+- `ADMIN_API_TOKEN`
+- `JOB_TOKEN`
+- `SCENE_READ_TOKEN`
+- `AUTH_SECRET`
+- `SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `TWITCASTING_CLIENT_ID`
+- `TWITCASTING_CLIENT_SECRET`
+- `LLM_API_KEY`
+- `TTS_API_KEY`
+- `TTS_BASE_URL`
+- `PUBLIC_BASIC_AUTH_PASSWORD`
+- `BACKUP_ENCRYPTION_KEY`
 
 ## Supabase setup
 
@@ -49,6 +54,9 @@ Choose one before API deployment:
 
 ## API deployment
 
+- [x] Backend code exists.
+- [x] Admin/job endpoints require bearer tokens.
+- [x] Render blueprint exists.
 - [ ] Create API server project.
 - [ ] Set environment variables.
 - [ ] Verify `/api/health`.
