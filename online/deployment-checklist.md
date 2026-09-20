@@ -19,6 +19,7 @@
 - Consent-gated data export request route exists.
 - Retention policy route and export audit route exist.
 - Private Storage buckets exist for audio, avatars, and exports.
+- Consent revocation blocks future exports through latest-permission RLS.
 
 ## Online URLs
 
@@ -45,9 +46,10 @@
 - [x] Add customer-approved character change request table.
 - [x] Add customer change request insert/select policies.
 - [x] Add customer training permission insert policy.
+- [x] Add customer training permission update policy.
 - [x] Add approval/apply workflow from `character_change_requests` to `characters`.
 - [x] Add character snapshot policy for `character_versions`.
-- [x] Add `data_exports` table and consent-gated insert policy.
+- [x] Add `data_exports` table and latest-consent-gated insert policy.
 - [x] Add `data_retention_policies` table and RLS.
 - [x] Add `export_audit_events` table and RLS.
 - [x] Create private storage buckets for generated voice audio, avatar assets, and exports.
@@ -90,6 +92,7 @@
 - [x] OBS scene static URL.
 - [x] Customer dashboard explains required JWT and flow.
 - [x] Customer dashboard calls JWT customer API.
+- [x] Customer dashboard can allow and revoke data permissions.
 - [x] Review dashboard calls JWT customer API.
 - [x] Review dashboard has apply/reject controls.
 - [x] Data console creates consent-gated export requests.
@@ -133,11 +136,11 @@
 - [x] Model training consent can be saved separately.
 - [x] External data sales consent can be saved separately.
 - [x] Data export requests are tenant-scoped.
-- [x] Data export requests require matching active consent.
+- [x] Data export requests require matching latest active consent.
 - [x] Retention period visible and configurable.
 - [x] Data export request audit records operator, time, purpose.
 - [x] Completed export files can be stored in a private bucket.
-- [ ] Revocation removes future exports.
+- [x] Revocation blocks future exports.
 
 ## Completion definition
 
