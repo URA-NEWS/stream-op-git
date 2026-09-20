@@ -1,8 +1,17 @@
 # Online Deployment Checklist
 
+## Current status
+
+- Supabase existing project used: `Tool`
+- Supabase project ref: `lcnuxfvjownsmqvuagkd`
+- Supabase region: `ap-northeast-1`
+- Ikoeru tenant created: `ikoeru-ai`
+- First stream target: `twitcasting / l_xxx999`
+- Secrets are not stored in GitHub.
+
 ## Provider decision
 
-Choose one before deployment:
+Choose one before API deployment:
 
 1. Render Free + Supabase Free
    - Lowest cost.
@@ -21,7 +30,6 @@ Choose one before deployment:
 
 - AUTH_SECRET
 - SUPABASE_URL
-- SUPABASE_ANON_KEY
 - SUPABASE_SERVICE_ROLE_KEY
 - TWITCASTING_CLIENT_ID
 - TWITCASTING_CLIENT_SECRET
@@ -32,9 +40,10 @@ Choose one before deployment:
 
 ## Supabase setup
 
-- [ ] Create project.
-- [ ] Run `online/supabase-schema.sql`.
-- [ ] Add RLS policies per tenant.
+- [x] Use existing project `Tool`.
+- [x] Run `online/supabase-schema.sql` as migration.
+- [x] Insert first tenant, character, and TwitCasting stream.
+- [ ] Add production RLS policies per tenant before exposing browser writes.
 - [ ] Create storage bucket for generated voice audio and avatar assets.
 - [ ] Configure backups.
 
@@ -50,21 +59,22 @@ Choose one before deployment:
 
 ## Frontend deployment
 
-- [ ] Owner admin dashboard URL.
+- [x] Owner dashboard static URL.
+- [x] OBS scene static URL.
 - [ ] Customer dashboard URL.
-- [ ] OBS scene URL.
+- [ ] Connect dashboard to deployed API URL.
 - [ ] Access control verified.
 - [ ] Emergency stop verified.
 
 ## OBS test
 
-- [ ] Add online scene URL as Browser Source.
-- [ ] Confirm left side remains empty for external comment viewer.
-- [ ] Confirm イコエルAI appears on the right.
-- [ ] Confirm speech bubble appears without covering comment viewer.
-- [ ] Confirm blink loop.
-- [ ] Confirm lip sync while audio plays.
-- [ ] Confirm emergency stop clears speech/audio.
+- [x] Provide online scene URL.
+- [x] Keep left side empty for external comment viewer.
+- [x] Place イコエルAI on the right.
+- [x] Speech bubble does not cover left comment viewer.
+- [x] Blink/lip-sync hooks implemented.
+- [ ] Confirm avatar image renders after GitHub Pages cache refresh.
+- [ ] Confirm emergency stop clears speech/audio through deployed API.
 
 ## Live TwitCasting test
 
@@ -80,8 +90,9 @@ Choose one before deployment:
 
 ## Data monetization readiness
 
-- [ ] Service improvement consent separated from external sale consent.
-- [ ] Model training consent separated from both.
+- [x] Tables for feedback, training permissions, and audit logs exist.
+- [ ] Service improvement consent separated from external sale consent in UI.
+- [ ] Model training consent separated from both in UI.
 - [ ] Retention period visible.
 - [ ] Revocation removes future exports.
 - [ ] Exports are tenant-scoped.
@@ -91,8 +102,8 @@ Choose one before deployment:
 
 Online rollout is complete only when:
 
-- A network URL is live.
-- Admin/customer/OBS URLs work.
+- A network API URL is live.
+- Admin/customer/OBS URLs work against the live API.
 - TwitCasting live comments create replies.
 - Audio and avatar animation work in OBS.
 - Secrets are stored only in hosting provider.
