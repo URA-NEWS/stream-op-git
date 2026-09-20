@@ -1,6 +1,8 @@
 -- Ikoeru AI online-only Supabase schema draft
 -- Review before production. Enable RLS before exposing client access.
 
+create extension if not exists pgcrypto;
+
 create table if not exists tenants (
   id uuid primary key default gen_random_uuid(),
   name text not null,
@@ -96,6 +98,21 @@ create table if not exists training_permissions (
   created_at timestamptz not null default now()
 );
 
+create table if not exists access_tokens (
+  id uuid primary key default gen_random_uuid(),
+  tenant_id uuid not null references tenants(id) on delete cascade,
+  stream_id uuid references streams(id) on delete cascade,
+  name text not null,
+  token_hash text not null,
+  scope text not null check (scope in ('admin', 'job', 'scene')),
+  expires_at timestamptz,
+  revoked_at timestamptz,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists access_tokens_lookup_idx on access_tokens(scope, token_hash) where revoked_at is null;
+create index if not exists access_tokens_tenant_idx on access_tokens(tenant_id, scope);
+
 create table if not exists audit_logs (
   id uuid primary key default gen_random_uuid(),
   tenant_id uuid references tenants(id) on delete set null,
@@ -115,4 +132,5 @@ alter table comments enable row level security;
 alter table replies enable row level security;
 alter table feedback enable row level security;
 alter table training_permissions enable row level security;
+alter table access_tokens enable row level security;
 alter table audit_logs enable row level security;
