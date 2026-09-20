@@ -1,0 +1,29 @@
+name: Online Backend CI
+
+on:
+  push:
+    paths:
+      - 'online/backend/**'
+      - '.github/workflows/online-backend.yml'
+  pull_request:
+    paths:
+      - 'online/backend/**'
+      - '.github/workflows/online-backend.yml'
+
+jobs:
+  node-check:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: online/backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install
+      - run: node --check src/server.js
+      - run: node --check src/twitcasting.js
+      - run: node --check src/llm.js
+      - run: node --check src/tts.js
+      - run: node --check src/reply-policy.js
