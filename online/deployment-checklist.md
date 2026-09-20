@@ -8,7 +8,7 @@
 - Ikoeru tenant created: `ikoeru-ai`
 - First stream target: `twitcasting / l_xxx999`
 - Secrets are not stored in GitHub.
-- Owner dashboard, customer console, review console, kit builder, and OBS scene are online on GitHub Pages.
+- Owner dashboard, customer console, review console, data console, kit builder, and OBS scene are online on GitHub Pages.
 - Secure Supabase Edge Function is deployed with JWT verification enabled.
 - Customer Supabase Edge Function is deployed with JWT verification enabled.
 - Tenant-scoped access token table exists for admin/job/scene authorization.
@@ -16,12 +16,14 @@
 - Customer change request storage and RLS exist.
 - Customer change request approval/apply route exists.
 - Customer training-permission storage route exists.
+- Consent-gated data export request route exists.
 
 ## Online URLs
 
 - Owner dashboard: https://ura-news.github.io/stream-op-git/online/index.html?v=5
 - Customer console: https://ura-news.github.io/stream-op-git/online/customer.html?v=2
 - Change request review: https://ura-news.github.io/stream-op-git/online/review.html
+- Data monetization console: https://ura-news.github.io/stream-op-git/online/data.html
 - Kit builder: https://ura-news.github.io/stream-op-git/online/kits.html
 - OBS scene: https://ura-news.github.io/stream-op-git/online/scene.html?demo=1&v=5
 - Secure Supabase Edge API: https://lcnuxfvjownsmqvuagkd.functions.supabase.co/ikoeru-secure
@@ -43,6 +45,7 @@
 - [x] Add customer training permission insert policy.
 - [x] Add approval/apply workflow from `character_change_requests` to `characters`.
 - [x] Add character snapshot policy for `character_versions`.
+- [x] Add `data_exports` table and consent-gated insert policy.
 - [ ] Create storage bucket for generated voice audio and avatar assets.
 - [ ] Configure backups.
 
@@ -61,6 +64,7 @@
 - [x] Customer change request route exists.
 - [x] Customer change request apply/reject route exists.
 - [x] Customer training permission route exists.
+- [x] Customer data export request route exists.
 - [ ] Public OBS/job API created with token scope lookup.
 - [ ] Set environment variables/secrets.
 - [ ] Verify `/api/health` with an actual Supabase Auth user JWT.
@@ -74,12 +78,14 @@
 - [x] Owner dashboard static URL.
 - [x] Customer dashboard URL.
 - [x] Change request review URL.
+- [x] Data monetization console URL.
 - [x] Kit builder URL.
 - [x] OBS scene static URL.
 - [x] Customer dashboard explains required JWT and flow.
 - [x] Customer dashboard calls JWT customer API.
 - [x] Review dashboard calls JWT customer API.
 - [x] Review dashboard has apply/reject controls.
+- [x] Data console creates consent-gated export requests.
 - [x] OBS scene can receive API URL, stream ID, and scene token.
 - [x] OBS avatar path uses GitHub Pages absolute path with raw fallback.
 - [ ] Connect owner dashboard to deployed admin API URL.
@@ -117,9 +123,11 @@
 - [x] Service improvement consent can be saved separately.
 - [x] Model training consent can be saved separately.
 - [x] External data sales consent can be saved separately.
+- [x] Data export requests are tenant-scoped.
+- [x] Data export requests require matching active consent.
 - [ ] Retention period visible.
 - [ ] Revocation removes future exports.
-- [ ] Exports are tenant-scoped.
+- [ ] Completed export files are stored in a private bucket.
 - [ ] Audit log records export operator, time, purpose.
 
 ## Completion definition
