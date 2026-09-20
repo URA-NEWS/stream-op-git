@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>イコエルAI Kit Builder</title>
+  <style>
+    :root{color-scheme:dark;--bg:#060910;--panel:#101827;--line:#2b4263;--text:#f7fbff;--muted:#9cafc9;--blue:#3988ff;--orange:#ff9d2e}*{box-sizing:border-box;letter-spacing:0}body{margin:0;background:radial-gradient(circle at 78% 0,rgba(255,157,46,.18),transparent 24%),#060910;color:var(--text);font:15px/1.65 system-ui,"Yu Gothic UI",Meiryo,sans-serif}.wrap{max-width:1260px;margin:auto;padding:28px}.top{display:flex;justify-content:space-between;align-items:end;gap:18px;margin-bottom:22px}.top h1{margin:0;font-size:30px}.top p{margin:6px 0 0;color:var(--muted)}.grid{display:grid;grid-template-columns:minmax(0,1fr) 430px;gap:18px}.panel{border:1px solid var(--line);background:rgba(16,24,39,.92);border-radius:8px;padding:18px}.panel h2{margin:0 0 12px;font-size:18px}.stack{display:grid;gap:12px}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.field label{display:block;color:var(--muted);font-size:12px;font-weight:850;margin-bottom:6px}.input,.area{width:100%;border:1px solid #385574;background:#0b111c;color:var(--text);border-radius:8px;padding:12px;font:inherit}.area{min-height:116px;resize:vertical}button,a{border:1px solid #f7fbff;background:#f7fbff;color:#07101d;border-radius:8px;min-height:42px;padding:10px 14px;font-weight:900;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}.secondary{background:#111927;color:var(--text);border-color:#385574}.actions{display:flex;gap:10px;flex-wrap:wrap}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#05080e;border:1px solid var(--line);border-radius:8px;padding:14px;min-height:420px}.hint{border-left:4px solid var(--orange);background:#1b1420;border-radius:8px;padding:12px 14px;color:#ffe4be}@media(max-width:900px){.grid,.row{grid-template-columns:1fr}.wrap{padding:20px}.top{align-items:flex-start;flex-direction:column}}
+  </style>
+</head>
+<body>
+<main class="wrap">
+  <section class="top"><div><h1>納品キット作成</h1><p>依頼ごとに独立したAI配信キットを作るための管理画面。</p></div><a class="secondary" href="./index.html?v=3">概要へ</a></section>
+  <section class="grid">
+    <div class="panel stack">
+      <h2>新規キット</h2>
+      <div class="row"><div class="field"><label>API URL</label><input id="api" class="input" placeholder="https://your-api.example.com"></div><div class="field"><label>管理トークン</label><input id="token" type="password" class="input"></div></div>
+      <div class="row"><div class="field"><label>顧客名</label><input id="tenantName" class="input" value="イコエルAI Demo"></div><div class="field"><label>Slug</label><input id="tenantSlug" class="input" value="ikoeru-demo"></div></div>
+      <div class="row"><div class="field"><label>キャラ名</label><input id="characterName" class="input" value="イコエルAI"></div><div class="field"><label>配信先ID</label><input id="externalUserId" class="input" value="l_xxx999"></div></div>
+      <div class="field"><label>初期キャラ方針</label><textarea id="prompt" class="area">アニメ調の男性キャラクター。落ち着いた距離感で、コメントから話題を広げる。質問を返し、会話の中でキャラの記憶と成長を積み上げる。</textarea></div>
+      <div class="actions"><button id="create">キット作成</button><button class="secondary" id="draft">APIなしで納品文だけ作る</button></div>
+      <div class="hint">本番ではここから顧客URL、OBS URL、キャラID、Stream IDを発行して納品する。</div>
+    </div>
+    <aside class="panel stack"><h2>出力</h2><pre id="out">未作成</pre></aside>
+  </section>
+</main>
+<script>
+const $=id=>document.getElementById(id);function base(){return $('api').value.trim().replace(/\/$/,'')}function payload(){return{tenant_name:$('tenantName').value,tenant_slug:$('tenantSlug').value,character_name:$('characterName').value,platform:'twitcasting',external_user_id:$('externalUserId').value,prompt:$('prompt').value,voice:{provider:'voicevox-proxy',name:'玄野武宏'},avatar:{url:'https://ura-news.github.io/stream-op-git/eru-promo.png',layout:'right-side'}}}function renderDraft(data){return ['納品キット',`顧客: ${data.tenant_name}`,`キャラ: ${data.character_name}`,`配信先: ${data.platform} / ${data.external_user_id}`,'','必要設定','- API URL','- 管理トークン','- OBS scene URL','- TwitCasting Client ID / Secret','- LLM API Key','- TTS backend','',`初期方針: ${data.prompt}`].join('\n')}
+$('draft').onclick=()=>{$('out').textContent=renderDraft(payload())};
+$('create').onclick=async()=>{try{const res=await fetch(base()+'/api/admin/kits',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+$('token').value.trim()},body:JSON.stringify(payload())});const data=await res.json();$('out').textContent=JSON.stringify(data,null,2)}catch(e){$('out').textContent='作成失敗: '+e.message+'\n\n'+renderDraft(payload())}};
+</script>
+</body>
+</html>
