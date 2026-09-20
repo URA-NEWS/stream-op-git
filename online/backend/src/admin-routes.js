@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import { requireBearer } from './auth.js';
 
+const jsonObject = z.record(z.string(), z.any());
+
 const kitSchema = z.object({
   tenant_name: z.string().min(1).max(120),
   tenant_slug: z.string().min(2).max(80).regex(/^[a-z0-9-]+$/),
@@ -8,9 +10,9 @@ const kitSchema = z.object({
   platform: z.string().min(1).max(40).default('twitcasting'),
   external_user_id: z.string().min(1).max(120),
   prompt: z.string().max(8000).optional(),
-  profile: z.record(z.any()).optional(),
-  voice: z.record(z.any()).optional(),
-  avatar: z.record(z.any()).optional(),
+  profile: jsonObject.optional(),
+  voice: jsonObject.optional(),
+  avatar: jsonObject.optional(),
 });
 
 const proposalSchema = z.object({
@@ -20,9 +22,9 @@ const proposalSchema = z.object({
 const applySchema = z.object({
   expected_version: z.number().int().min(1),
   prompt: z.string().max(12000).optional(),
-  profile: z.record(z.any()).optional(),
-  voice: z.record(z.any()).optional(),
-  avatar: z.record(z.any()).optional(),
+  profile: jsonObject.optional(),
+  voice: jsonObject.optional(),
+  avatar: jsonObject.optional(),
   reason: z.string().max(1000).optional(),
 });
 
@@ -41,6 +43,10 @@ const permissionSchema = z.object({
 
 function publicBase() {
   return (process.env.PUBLIC_CONTROL_BASE_URL || 'https://ura-news.github.io/stream-op-git/online').replace(/\/$/, '');
+}
+
+function assetUrl(path) {
+  return new URL(path, `${publicBase()}/`).toString();
 }
 
 function defaultPrompt(name) {
@@ -74,7 +80,7 @@ export function configureAdminRoutes(app, supabase, requireSupabase) {
       profile: kit.profile || { concept: 'online ai streamer', growth_mode: true },
       prompt: kit.prompt || defaultPrompt(kit.character_name),
       voice: kit.voice || { provider: process.env.TTS_PROVIDER || 'none', name: process.env.TTS_VOICE || '玄野武宏' },
-      avatar: kit.avatar || { url: `${publicBase()}/../eru-promo.png`, layout: 'right-side' },
+      avatar: kit.avatar || { url: assetUrl('../eru-promo.png'), layout: 'right-side' },
     }).select('*').single();
     if (characterResult.error) return res.status(500).json({ ok: false, error: 'character_create_failed', details: characterResult.error.message });
     const streamResult = await supabase.from('streams').insert({
