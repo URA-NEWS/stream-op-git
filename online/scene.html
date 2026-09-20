@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>イコエルAI OBS Scene</title>
   <style>
-    :root{--blue:#3988ff;--text:#f8fbff;--bubble:#ffffff;--ink:#101828}*{box-sizing:border-box;letter-spacing:0}html,body{width:100%;height:100%;margin:0;overflow:hidden;background:transparent;font-family:"Yu Gothic UI",Meiryo,system-ui,sans-serif}.scene{position:relative;width:100vw;height:100vh;background:linear-gradient(90deg,rgba(0,0,0,0) 0 50%,rgba(4,8,14,.12) 50% 100%)}.comment-safe-zone{position:absolute;left:0;top:0;width:50vw;height:100vh;pointer-events:none}.character-zone{position:absolute;right:0;top:0;width:50vw;height:100vh;display:grid;place-items:end center;padding:4vh 3vw}.avatar{position:relative;width:min(46vw,720px);height:min(92vh,920px);display:grid;place-items:end center;filter:drop-shadow(0 24px 38px rgba(0,0,0,.38))}.avatar img{max-width:100%;max-height:100%;object-fit:contain}.blink,.mouth{position:absolute;opacity:0;pointer-events:none;background:rgba(6,8,12,.88);border-radius:999px;transition:opacity 45ms linear}.avatar:not(.ready) .blink,.avatar:not(.ready) .mouth{display:none}.blink.left{left:42.5%;top:31.6%;width:7.5%;height:1.2%}.blink.right{left:53%;top:31.2%;width:7.4%;height:1.2%}.mouth{left:49.2%;top:42.3%;width:5.2%;height:1.7%;background:rgba(72,32,28,.92)}.avatar.ready.blinking .blink{opacity:1}.avatar.ready.talking .mouth{opacity:1;animation:talk .18s steps(2,end) infinite}.bubble{position:absolute;right:4vw;bottom:7vh;width:min(44vw,760px);min-height:110px;background:var(--bubble);color:var(--ink);border:3px solid #101828;border-radius:26px;padding:22px 28px;font-size:clamp(22px,2.2vw,38px);font-weight:850;line-height:1.45;box-shadow:0 22px 50px rgba(0,0,0,.26);opacity:0;transform:translateY(18px);transition:opacity .22s,transform .22s}.bubble:after{content:"";position:absolute;right:16%;bottom:-28px;border:15px solid transparent;border-top-color:#101828}.bubble:before{content:"";position:absolute;right:16.4%;bottom:-21px;border:12px solid transparent;border-top-color:white;z-index:2}.bubble.show{opacity:1;transform:translateY(0)}.nameplate{position:absolute;right:4vw;top:5vh;background:rgba(6,10,18,.78);border:1px solid rgba(86,145,255,.7);color:var(--text);border-radius:10px;padding:10px 14px;font-size:18px;font-weight:900;box-shadow:0 0 24px rgba(57,136,255,.24)}.status{position:absolute;right:4vw;top:calc(5vh + 54px);color:#9fb4d4;background:rgba(6,10,18,.68);border:1px solid rgba(86,145,255,.24);border-radius:8px;padding:7px 12px;font-size:13px}.debug{position:absolute;left:12px;bottom:10px;color:rgba(255,255,255,.36);font-size:11px}@keyframes talk{0%{transform:scaleY(.55)}100%{transform:scaleY(1.35)}}@media(max-aspect-ratio:4/3){.character-zone{width:56vw}.comment-safe-zone{width:44vw}.bubble{width:52vw;font-size:clamp(18px,3.2vw,32px)}}
+    :root{--blue:#3988ff;--text:#f8fbff;--bubble:#ffffff;--ink:#101828}*{box-sizing:border-box;letter-spacing:0}html,body{width:100%;height:100%;margin:0;overflow:hidden;background:transparent;font-family:"Yu Gothic UI",Meiryo,system-ui,sans-serif}.scene{position:relative;width:100vw;height:100vh;background:linear-gradient(90deg,rgba(0,0,0,0) 0 50%,rgba(4,8,14,.12) 50% 100%)}.comment-safe-zone{position:absolute;left:0;top:0;width:50vw;height:100vh;pointer-events:none}.character-zone{position:absolute;right:0;top:0;width:50vw;height:100vh;display:grid;place-items:end center;padding:4vh 3vw}.avatar{position:relative;width:min(46vw,720px);height:min(92vh,920px);display:grid;place-items:end center;filter:drop-shadow(0 24px 38px rgba(0,0,0,.38))}.avatar img{max-width:100%;max-height:100%;object-fit:contain}.fallback-face{display:none;position:absolute;bottom:7vh;width:min(32vw,420px);height:min(32vw,420px);border-radius:50%;background:linear-gradient(180deg,#1b2434,#070a10);border:2px solid rgba(57,136,255,.45);box-shadow:0 24px 80px rgba(0,0,0,.38)}.fallback-face:before{content:"イコエルAI";position:absolute;left:50%;top:45%;transform:translate(-50%,-50%);font-size:clamp(24px,3vw,42px);font-weight:900;color:white;white-space:nowrap}.avatar.fallback .fallback-face{display:block}.avatar.fallback img{display:none}.blink,.mouth{position:absolute;opacity:0;pointer-events:none;background:rgba(6,8,12,.88);border-radius:999px;transition:opacity 45ms linear}.avatar:not(.ready) .blink,.avatar:not(.ready) .mouth{display:none}.blink.left{left:42.5%;top:31.6%;width:7.5%;height:1.2%}.blink.right{left:53%;top:31.2%;width:7.4%;height:1.2%}.mouth{left:49.2%;top:42.3%;width:5.2%;height:1.7%;background:rgba(72,32,28,.92)}.avatar.fallback .blink.left{left:37%;top:45%;width:9%;height:2%}.avatar.fallback .blink.right{left:55%;top:45%;width:9%;height:2%}.avatar.fallback .mouth{left:46%;top:58%;width:10%;height:3%}.avatar.ready.blinking .blink{opacity:1}.avatar.ready.talking .mouth{opacity:1;animation:talk .18s steps(2,end) infinite}.bubble{position:absolute;right:4vw;bottom:7vh;width:min(44vw,760px);min-height:110px;background:var(--bubble);color:var(--ink);border:3px solid #101828;border-radius:26px;padding:22px 28px;font-size:clamp(22px,2.2vw,38px);font-weight:850;line-height:1.45;box-shadow:0 22px 50px rgba(0,0,0,.26);opacity:0;transform:translateY(18px);transition:opacity .22s,transform .22s}.bubble:after{content:"";position:absolute;right:16%;bottom:-28px;border:15px solid transparent;border-top-color:#101828}.bubble:before{content:"";position:absolute;right:16.4%;bottom:-21px;border:12px solid transparent;border-top-color:white;z-index:2}.bubble.show{opacity:1;transform:translateY(0)}.nameplate{position:absolute;right:4vw;top:5vh;background:rgba(6,10,18,.78);border:1px solid rgba(86,145,255,.7);color:var(--text);border-radius:10px;padding:10px 14px;font-size:18px;font-weight:900;box-shadow:0 0 24px rgba(57,136,255,.24)}.status{position:absolute;right:4vw;top:calc(5vh + 54px);color:#9fb4d4;background:rgba(6,10,18,.68);border:1px solid rgba(86,145,255,.24);border-radius:8px;padding:7px 12px;font-size:13px}.debug{position:absolute;left:12px;bottom:10px;color:rgba(255,255,255,.36);font-size:11px}@keyframes talk{0%{transform:scaleY(.55)}100%{transform:scaleY(1.35)}}@media(max-aspect-ratio:4/3){.character-zone{width:56vw}.comment-safe-zone{width:44vw}.bubble{width:52vw;font-size:clamp(18px,3.2vw,32px)}}
   </style>
 </head>
 <body>
@@ -15,7 +15,8 @@
     <div class="status" id="status">ONLINE SCENE / loading avatar</div>
     <div class="character-zone">
       <div class="avatar" id="avatar">
-        <img id="portrait" src="../eru-promo.png" alt="イコエルAI">
+        <img id="portrait" src="/stream-op-git/eru-promo.png" alt="イコエルAI">
+        <div class="fallback-face"></div>
         <div class="blink left"></div><div class="blink right"></div><div class="mouth"></div>
       </div>
     </div>
@@ -31,8 +32,10 @@
     const apiBase=params.get('api')||'';
     const streamId=params.get('stream_id')||'';
     const sceneToken=params.get('token')||'';
+    const fallbackSrc='https://raw.githubusercontent.com/URA-NEWS/stream-op-git/main/eru-promo.png';
     let cursor=0;
     let speaking=false;
+    let triedFallback=false;
     const queue=[];
     function blinkOnce(){if(!avatar.classList.contains('ready'))return;avatar.classList.add('blinking');setTimeout(()=>avatar.classList.remove('blinking'),110+Math.random()*70)}
     function scheduleBlink(){setTimeout(()=>{blinkOnce();scheduleBlink()},2200+Math.random()*4200)}
@@ -76,8 +79,11 @@
       }catch(e){status.textContent='ONLINE SCENE / API offline'}
       setTimeout(poll,1800);
     }
-    portrait.addEventListener('load',()=>{avatar.classList.add('ready');status.textContent='ONLINE SCENE / waiting'});
-    portrait.addEventListener('error',()=>{status.textContent='ONLINE SCENE / avatar image missing';bubble.textContent='画像パスを確認中。イコエルAIの表示素材がまだ読めていない。';bubble.classList.add('show')});
+    portrait.addEventListener('load',()=>{avatar.classList.add('ready');avatar.classList.remove('fallback');status.textContent='ONLINE SCENE / waiting'});
+    portrait.addEventListener('error',()=>{
+      if(!triedFallback){triedFallback=true;portrait.src=fallbackSrc;return}
+      avatar.classList.add('ready','fallback');status.textContent='ONLINE SCENE / avatar fallback';
+    });
     window.addEventListener('message',event=>{if(typeof event.data?.reply==='string')speak(event.data.reply,event.data.duration_ms,event.data.audio_url||'')});
     scheduleBlink();
     if(params.get('demo')==='1')setTimeout(()=>speak('リスナーのコメント、拾ったらただ返すだけじゃなくて話を広げる。イコエルAIはそこを育てる。'),800);
