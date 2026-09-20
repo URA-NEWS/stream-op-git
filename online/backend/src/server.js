@@ -8,6 +8,7 @@ import { getComments, getCurrentLive, twitcastingConfigured } from './twitcastin
 import { cleanReply, generateText } from './llm.js';
 import { buildIkoeruPrompt, fallbackReply } from './reply-policy.js';
 import { synthesizeSpeech } from './tts.js';
+import { publicConfigState, readinessReport } from './config.js';
 
 const app = express();
 const port = Number(process.env.PORT || 3000);
@@ -26,23 +27,21 @@ function requireSupabase(res) {
   return true;
 }
 
-function publicConfigState() {
-  return {
-    supabase: Boolean(supabase),
-    twitcasting: twitcastingConfigured(),
-    llm: Boolean(process.env.LLM_PROVIDER && process.env.LLM_API_KEY),
-    tts: Boolean(process.env.TTS_PROVIDER && (process.env.TTS_API_KEY || process.env.TTS_PROVIDER === 'none')),
-  };
+async function databaseState() {
+  if (!supabase) return 'not_configured';
+  const { error } = await supabase.from('tenants').select('id').limit(1);
+  return error ? 'error' : 'ready';
 }
 
 app.get('/api/health', async (_req, res) => {
-  const configured = publicConfigState();
-  let database = 'not_configured';
-  if (supabase) {
-    const { error } = await supabase.from('tenants').select('id').limit(1);
-    database = error ? 'error' : 'ready';
-  }
-  res.json({ ok: true, service: 'ikoeru-ai-online', database, configured });
+  const database = await databaseState();
+  res.json({ ok: true, service: 'ikoeru-ai-online', database, configured: publicConfigState() });
+});
+
+app.get('/api/readiness', async (_req, res) => {
+  const database = await databaseState();
+  const report = readinessReport(database);
+  res.status(report.ready ? 200 : 503).json({ ok: report.ready, service: 'ikoeru-ai-online', ...report });
 });
 
 app.post('/api/integrations/twitcasting/test', async (req, res) => {
