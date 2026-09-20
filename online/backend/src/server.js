@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
+import { getComments, getCurrentLive, twitcastingConfigured } from './twitcasting.js';
 
 const app = express();
 const port = Number(process.env.PORT || 3000);
@@ -23,7 +24,7 @@ function requireSupabase(res) {
 function publicConfigState() {
   return {
     supabase: Boolean(supabase),
-    twitcasting: Boolean(process.env.TWITCASTING_CLIENT_ID && process.env.TWITCASTING_CLIENT_SECRET),
+    twitcasting: twitcastingConfigured(),
     llm: Boolean(process.env.LLM_PROVIDER && process.env.LLM_API_KEY),
     tts: Boolean(process.env.TTS_PROVIDER && process.env.TTS_API_KEY),
   };
@@ -39,6 +40,46 @@ app.get('/api/health', async (_req, res) => {
   res.json({ ok: true, service: 'ikoeru-ai-online', database, configured });
 });
 
+app.post('/api/integrations/twitcasting/test', async (_req, res) => {
+  if (!twitcastingConfigured()) return res.status(503).json({ ok: false, error: 'twitcasting_not_configured' });
+  try {
+    const live = await getCurrentLive();
+    const movie = live.movie || null;
+    res.json({ ok: true, state: movie?.is_live ? 'connected' : 'offline', movie_id: movie?.id || null });
+  } catch (error) {
+    res.status(error.status === 404 ? 404 : 502).json({ ok: false, error: error.message || 'twitcasting_test_failed' });
+  }
+});
+
+app.post('/api/jobs/twitcasting/poll', async (_req, res) => {
+  if (!requireSupabase(res)) return;
+  if (!twitcastingConfigured()) return res.status(503).json({ ok: false, error: 'twitcasting_not_configured' });
+  try {
+    const live = await getCurrentLive();
+    const movie = live.movie || {};
+    if (!movie.is_live) return res.json({ ok: true, state: 'offline', inserted: 0 });
+    const streamResult = await supabase.from('streams').select('*').eq('platform', 'twitcasting').eq('external_user_id', process.env.TWITCASTING_USER_ID).limit(1).single();
+    if (streamResult.error || !streamResult.data) return res.status(404).json({ ok: false, error: 'stream_not_found' });
+    const stream = streamResult.data;
+    if (stream.emergency_stop) return res.json({ ok: true, state: 'emergency_stop', inserted: 0 });
+    const previous = stream.last_cursor?.movie_id === String(movie.id) ? stream.last_cursor?.comment_id : undefined;
+    const commentsPayload = await getComments(movie.id, previous);
+    const comments = [...(commentsPayload.comments || [])].sort((a, b) => Number(a.id) - Number(b.id));
+    if (!previous) {
+      const lastId = comments.at(-1)?.id || '0';
+      await supabase.from('streams').update({ status: 'connected', last_cursor: { movie_id: String(movie.id), comment_id: String(lastId) }, updated_at: new Date().toISOString() }).eq('id', stream.id);
+      return res.json({ ok: true, state: 'baseline', inserted: 0, movie_id: movie.id });
+    }
+    const rows = comments.filter(item => Number(item.id) > Number(previous)).filter(item => String(item.from_user?.id || '') !== String(movie.user_id)).map(item => ({ stream_id: stream.id, platform: 'twitcasting', external_comment_id: String(item.id), viewer_external_id: String(item.from_user?.id || ''), viewer_name: item.from_user?.screen_id || item.from_user?.name || 'viewer', body: String(item.message || '') }));
+    if (rows.length) await supabase.from('comments').upsert(rows, { onConflict: 'stream_id,platform,external_comment_id', ignoreDuplicates: true });
+    const lastId = comments.at(-1)?.id || previous;
+    await supabase.from('streams').update({ status: 'connected', last_cursor: { movie_id: String(movie.id), comment_id: String(lastId) }, updated_at: new Date().toISOString() }).eq('id', stream.id);
+    res.json({ ok: true, state: 'connected', inserted: rows.length, movie_id: movie.id });
+  } catch (error) {
+    res.status(502).json({ ok: false, error: error.message || 'twitcasting_poll_failed' });
+  }
+});
+
 app.get('/api/characters/:id', async (req, res) => {
   if (!requireSupabase(res)) return;
   const { data, error } = await supabase.from('characters').select('*').eq('id', req.params.id).single();
@@ -52,9 +93,7 @@ app.get('/api/scene/events', async (req, res) => {
   const streamId = String(req.query.stream_id || '');
   if (!Number.isFinite(after) || after < 0) return res.status(400).json({ ok: false, error: 'invalid_cursor' });
   let query = supabase.from('replies').select('id,reply,audio_url,created_at,status').eq('status', 'queued').order('created_at', { ascending: true }).limit(10);
-  if (streamId) {
-    query = query.eq('stream_id', streamId);
-  }
+  if (streamId) query = query.eq('stream_id', streamId);
   const { data, error } = await query;
   if (error) return res.status(500).json({ ok: false, error: 'event_query_failed' });
   const events = (data || []).map((item, index) => ({ id: after + index + 1, reply: item.reply, audio_url: item.audio_url, duration_ms: Math.max(2200, Math.min(12000, item.reply.length * 130)) }));
