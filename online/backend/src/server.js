@@ -3,6 +3,8 @@ import cors from 'cors';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { getComments, getCurrentLive, twitcastingConfigured } from './twitcasting.js';
+import { cleanReply, generateText } from './llm.js';
+import { buildIkoeruPrompt, fallbackReply } from './reply-policy.js';
 
 const app = express();
 const port = Number(process.env.PORT || 3000);
@@ -78,6 +80,30 @@ app.post('/api/jobs/twitcasting/poll', async (_req, res) => {
   } catch (error) {
     res.status(502).json({ ok: false, error: error.message || 'twitcasting_poll_failed' });
   }
+});
+
+app.post('/api/jobs/replies/generate', async (_req, res) => {
+  if (!requireSupabase(res)) return;
+  const { data: comments, error } = await supabase.from('comments').select('*, streams(character_id, emergency_stop), replies(id)').is('replies.id', null).order('received_at', { ascending: true }).limit(5);
+  if (error) return res.status(500).json({ ok: false, error: 'comment_query_failed' });
+  let generated = 0;
+  for (const comment of comments || []) {
+    if (comment.streams?.emergency_stop) continue;
+    const characterId = comment.streams?.character_id;
+    const { data: character } = await supabase.from('characters').select('*').eq('id', characterId).single();
+    const prompt = buildIkoeruPrompt({ character, comment: comment.body, viewerName: comment.viewer_name });
+    let reply = '';
+    try {
+      reply = cleanReply(await generateText(prompt), Number(process.env.MAX_REPLY_CHARS || 180));
+    } catch (_error) {
+      reply = fallbackReply(comment.body);
+    }
+    if (!reply) reply = fallbackReply(comment.body);
+    const insert = { stream_id: comment.stream_id, comment_id: comment.id, character_id: characterId, reply, model: process.env.LLM_MODEL || process.env.LLM_PROVIDER || 'fallback', status: 'queued' };
+    const result = await supabase.from('replies').insert(insert);
+    if (!result.error) generated += 1;
+  }
+  res.json({ ok: true, generated });
 });
 
 app.get('/api/characters/:id', async (req, res) => {
