@@ -7,12 +7,15 @@ Hosted Node/Express API for イコエルAI online operation.
 - Node.js 20+
 - Supabase service role key
 - TwitCasting API credentials
-- Optional LLM provider
-- Optional TTS provider
+- LLM provider for AI replies
+- TTS provider for voice output
 
 ## Required environment variables
 
 ```text
+ADMIN_API_TOKEN=
+JOB_TOKEN=
+SCENE_READ_TOKEN=
 SUPABASE_URL=
 SUPABASE_SERVICE_ROLE_KEY=
 TWITCASTING_USER_ID=l_xxx999
@@ -22,11 +25,20 @@ LLM_PROVIDER=openai
 LLM_API_KEY=
 LLM_MODEL=gpt-4o-mini
 TTS_PROVIDER=none
+TTS_BASE_URL=
+TTS_API_KEY=
 TTS_VOICE=玄野武宏
 TTS_SPEAKER_ID=11
 ```
 
 Never commit real values.
+
+## Auth model
+
+- `GET /api/health` is public and returns only configuration booleans.
+- Admin operations require `Authorization: Bearer $ADMIN_API_TOKEN`.
+- Scheduled jobs require `Authorization: Bearer $JOB_TOKEN`.
+- OBS scene events require `SCENE_READ_TOKEN` only when that variable is configured. Pass it as `?token=...` or a Bearer token.
 
 ## Endpoints
 
@@ -35,7 +47,7 @@ Never commit real values.
 - `POST /api/jobs/twitcasting/poll`
 - `POST /api/jobs/replies/generate`
 - `POST /api/jobs/replies/synthesize`
-- `GET /api/scene/events?stream_id=...&after=0`
+- `GET /api/scene/events?stream_id=...&after=0&token=...`
 - `POST /api/streams/:id/emergency-stop`
 - `POST /api/streams/:id/resume`
 - `POST /api/feedback`
