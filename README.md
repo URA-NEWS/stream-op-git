@@ -7,7 +7,7 @@
 ## 入口URL
 
 - 管理画面: https://ura-news.github.io/stream-op-git/online/index.html?v=4
-- ユーザー管理画面: https://ura-news.github.io/stream-op-git/online/customer.html
+- ユーザー管理画面: https://ura-news.github.io/stream-op-git/online/customer.html?v=2
 - 納品キット作成画面: https://ura-news.github.io/stream-op-git/online/kits.html
 - OBS画面: https://ura-news.github.io/stream-op-git/online/scene.html?demo=1&v=4
 - Supabase安全API: https://lcnuxfvjownsmqvuagkd.functions.supabase.co/ikoeru-secure
@@ -20,7 +20,9 @@
 
 画面はオンラインで開ける。SupabaseのDBも作成済み。JWT必須の安全APIと顧客管理APIもオンラインに作成済み。
 
-OBSや外部ジョブが直接呼べる公開APIは、サービスロールを使う実装が安全判定で拒否されたため未公開。代わりに、テナントユーザーRLSとテナント/ストリーム別アクセストークンの土台を入れた。
+ユーザー管理画面は、顧客がSupabase JWTを入れて、自分に許可されたキャラクターと配信だけを読み込み、キャラの口調・会話設計・成長ルールの変更依頼を送れる形にした。変更依頼は直接本番キャラを書き換えず、`character_change_requests` に蓄積する。
+
+OBSや外部ジョブが直接呼べる公開APIは、サービスロールを使う実装が安全判定で拒否されたため未公開。代わりに、テナントユーザーRLS、顧客変更依頼、学習許可、テナント/ストリーム別アクセストークンの土台を入れた。
 
 ## API URLを作るルート
 
@@ -49,6 +51,8 @@ OBSや外部ジョブが直接呼べる公開APIは、サービスロールを�
 - JWT必須のSupabase Edge Function `ikoeru-secure` 作成済み。
 - JWT必須のSupabase Edge Function `ikoeru-customer-api` 作成済み。
 - `tenant_users` と顧客管理用RLS作成済み。
+- `character_change_requests` と顧客変更依頼API作成済み。
+- 顧客の学習・外部提供許可保存API作成済み。
 - `access_tokens` とスコープ別トークン土台作成済み。
 - Node/Express APIコード作成済み。
 - TwitCastingコメント取得コード作成済み。
@@ -70,12 +74,13 @@ OBSや外部ジョブが直接呼べる公開APIは、サービスロールを�
 
 1. OBS/ジョブ用APIを安全に公開する。
 2. Supabase Authに顧客ユーザーを紐づける。
-3. 秘密キーをSupabase SecretsまたはRender/Railway環境変数に入れる。
-4. `/api/health` を確認する。
-5. TwitCasting接続テストをする。
-6. OBSに `online/scene.html` を入れて実配信テストする。
-7. 音声生成バックエンドを本番用に接続する。
-8. データエクスポートとバックアップを本番用に固める。
+3. 管理側で `character_change_requests` の承認・適用画面を作る。
+4. 秘密キーをSupabase SecretsまたはRender/Railway環境変数に入れる。
+5. `/api/health` を実JWTで確認する。
+6. TwitCasting接続テストをする。
+7. OBSに `online/scene.html` を入れて実配信テストする。
+8. 音声生成バックエンドを本番用に接続する。
+9. データエクスポートとバックアップを本番用に固める。
 
 ## GitHubに入れない秘密情報
 
@@ -96,6 +101,8 @@ Render/Railway/Supabaseなどの環境変数へ入れる。
 
 - ネット上のAPI URLが生きている。
 - 管理画面がAPIにつながる。
+- ユーザー管理画面が実JWTで顧客データを読める。
+- 顧客の変更依頼と学習許可がSupabaseに保存される。
 - ツイキャスコメントがSupabaseに保存される。
 - AI返答が生成される。
 - 音声生成される。
