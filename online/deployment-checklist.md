@@ -14,6 +14,7 @@
 - Tenant-scoped access token table exists for admin/job/scene authorization.
 - Tenant user membership and RLS exist for customer console reads.
 - Customer change request storage and RLS exist.
+- Customer change request approval/apply route exists.
 - Customer training-permission storage route exists.
 
 ## Online URLs
@@ -40,7 +41,8 @@
 - [x] Add customer-approved character change request table.
 - [x] Add customer change request insert/select policies.
 - [x] Add customer training permission insert policy.
-- [ ] Add approval/apply workflow from `character_change_requests` to `characters`.
+- [x] Add approval/apply workflow from `character_change_requests` to `characters`.
+- [x] Add character snapshot policy for `character_versions`.
 - [ ] Create storage bucket for generated voice audio and avatar assets.
 - [ ] Configure backups.
 
@@ -57,6 +59,7 @@
 - [x] Tenant-scoped token storage exists.
 - [x] Customer read routes exist.
 - [x] Customer change request route exists.
+- [x] Customer change request apply/reject route exists.
 - [x] Customer training permission route exists.
 - [ ] Public OBS/job API created with token scope lookup.
 - [ ] Set environment variables/secrets.
@@ -76,6 +79,7 @@
 - [x] Customer dashboard explains required JWT and flow.
 - [x] Customer dashboard calls JWT customer API.
 - [x] Review dashboard calls JWT customer API.
+- [x] Review dashboard has apply/reject controls.
 - [x] OBS scene can receive API URL, stream ID, and scene token.
 - [x] OBS avatar path uses GitHub Pages absolute path with raw fallback.
 - [ ] Connect owner dashboard to deployed admin API URL.
