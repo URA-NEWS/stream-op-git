@@ -164,11 +164,13 @@ alter table training_permissions enable row level security;
 alter table access_tokens enable row level security;
 alter table audit_logs enable row level security;
 
-create policy if not exists tenant_users_self_select on tenant_users for select using (user_id = auth.uid());
-create policy if not exists tenants_member_select on tenants for select using (exists (select 1 from tenant_users tu where tu.tenant_id = tenants.id and tu.user_id = auth.uid()));
-create policy if not exists characters_member_select on characters for select using (exists (select 1 from tenant_users tu where tu.tenant_id = characters.tenant_id and tu.user_id = auth.uid()));
-create policy if not exists streams_member_select on streams for select using (exists (select 1 from tenant_users tu where tu.tenant_id = streams.tenant_id and tu.user_id = auth.uid()));
-create policy if not exists training_permissions_member_select on training_permissions for select using (exists (select 1 from tenant_users tu where tu.tenant_id = training_permissions.tenant_id and tu.user_id = auth.uid()));
-create policy if not exists training_permissions_member_insert on training_permissions for insert with check (exists (select 1 from tenant_users tu where tu.tenant_id = training_permissions.tenant_id and tu.user_id = auth.uid() and tu.role in ('owner', 'operator')));
-create policy if not exists character_change_requests_member_select on character_change_requests for select using (exists (select 1 from tenant_users tu where tu.tenant_id = character_change_requests.tenant_id and tu.user_id = auth.uid()));
-create policy if not exists character_change_requests_member_insert on character_change_requests for insert with check (requested_by = auth.uid() and exists (select 1 from tenant_users tu where tu.tenant_id = character_change_requests.tenant_id and tu.user_id = auth.uid()) and (character_id is null or exists (select 1 from characters c where c.id = character_change_requests.character_id and c.tenant_id = character_change_requests.tenant_id)));
+-- Policies in this section are shown for reference. If re-running manually, drop an existing
+-- policy before creating it again, because Postgres does not support CREATE POLICY IF NOT EXISTS.
+create policy tenant_users_self_select on tenant_users for select using (user_id = auth.uid());
+create policy tenants_member_select on tenants for select using (exists (select 1 from tenant_users tu where tu.tenant_id = tenants.id and tu.user_id = auth.uid()));
+create policy characters_member_select on characters for select using (exists (select 1 from tenant_users tu where tu.tenant_id = characters.tenant_id and tu.user_id = auth.uid()));
+create policy streams_member_select on streams for select using (exists (select 1 from tenant_users tu where tu.tenant_id = streams.tenant_id and tu.user_id = auth.uid()));
+create policy training_permissions_member_select on training_permissions for select using (exists (select 1 from tenant_users tu where tu.tenant_id = training_permissions.tenant_id and tu.user_id = auth.uid()));
+create policy training_permissions_member_insert on training_permissions for insert with check (exists (select 1 from tenant_users tu where tu.tenant_id = training_permissions.tenant_id and tu.user_id = auth.uid() and tu.role in ('owner', 'operator')));
+create policy character_change_requests_member_select on character_change_requests for select using (exists (select 1 from tenant_users tu where tu.tenant_id = character_change_requests.tenant_id and tu.user_id = auth.uid()));
+create policy character_change_requests_member_insert on character_change_requests for insert with check (requested_by = auth.uid() and exists (select 1 from tenant_users tu where tu.tenant_id = character_change_requests.tenant_id and tu.user_id = auth.uid()) and (character_id is null or exists (select 1 from characters c where c.id = character_change_requests.character_id and c.tenant_id = character_change_requests.tenant_id)));
