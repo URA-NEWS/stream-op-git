@@ -1,1 +1,20 @@
-{"name":"ikoeru-ai-online-backend","version":"0.1.0","private":true,"type":"module","scripts":{"start":"node src/server.js","dev":"node src/server.js"},"dependencies":{"@supabase/supabase-js":"latest","express":"latest","cors":"latest","zod":"latest"},"engines":{"node":">=20"}}
+{
+  "name": "ikoeru-ai-online-backend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node src/server.js",
+    "check": "node --check src/admin-routes.js && node --check src/auth.js && node --check src/config.js && node --check src/server.js && node --check src/twitcasting.js && node --check src/llm.js && node --check src/tts.js && node --check src/reply-policy.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "latest",
+    "express": "latest",
+    "cors": "latest",
+    "zod": "latest"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
