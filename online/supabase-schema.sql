@@ -11,6 +11,17 @@ create table if not exists tenants (
   created_at timestamptz not null default now()
 );
 
+create table if not exists tenant_users (
+  id uuid primary key default gen_random_uuid(),
+  tenant_id uuid not null references tenants(id) on delete cascade,
+  user_id uuid not null,
+  role text not null default 'owner' check (role in ('owner', 'operator', 'viewer')),
+  created_at timestamptz not null default now(),
+  unique(tenant_id, user_id)
+);
+
+create index if not exists tenant_users_user_idx on tenant_users(user_id, tenant_id);
+
 create table if not exists characters (
   id uuid primary key default gen_random_uuid(),
   tenant_id uuid not null references tenants(id) on delete cascade,
@@ -125,6 +136,7 @@ create table if not exists audit_logs (
 );
 
 alter table tenants enable row level security;
+alter table tenant_users enable row level security;
 alter table characters enable row level security;
 alter table character_versions enable row level security;
 alter table streams enable row level security;
