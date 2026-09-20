@@ -13,11 +13,13 @@
 - Customer Supabase Edge Function is deployed with JWT verification enabled.
 - Tenant-scoped access token table exists for admin/job/scene authorization.
 - Tenant user membership and RLS exist for customer console reads.
+- Customer change request storage and RLS exist.
+- Customer training-permission storage route exists.
 
 ## Online URLs
 
 - Owner dashboard: https://ura-news.github.io/stream-op-git/online/index.html?v=4
-- Customer console: https://ura-news.github.io/stream-op-git/online/customer.html
+- Customer console: https://ura-news.github.io/stream-op-git/online/customer.html?v=2
 - Kit builder: https://ura-news.github.io/stream-op-git/online/kits.html
 - OBS scene: https://ura-news.github.io/stream-op-git/online/scene.html?demo=1&v=4
 - Secure Supabase Edge API: https://lcnuxfvjownsmqvuagkd.functions.supabase.co/ikoeru-secure
@@ -34,7 +36,10 @@
 - [x] Add tenant-scoped `access_tokens` table.
 - [x] Add `tenant_users` membership table.
 - [x] Add customer console RLS select policies.
-- [ ] Add write policies for customer-approved character changes.
+- [x] Add customer-approved character change request table.
+- [x] Add customer change request insert/select policies.
+- [x] Add customer training permission insert policy.
+- [ ] Add approval/apply workflow from `character_change_requests` to `characters`.
 - [ ] Create storage bucket for generated voice audio and avatar assets.
 - [ ] Configure backups.
 
@@ -49,9 +54,12 @@
 - [x] Secure Supabase Edge API exists.
 - [x] Customer Supabase Edge API exists.
 - [x] Tenant-scoped token storage exists.
+- [x] Customer read routes exist.
+- [x] Customer change request route exists.
+- [x] Customer training permission route exists.
 - [ ] Public OBS/job API created with token scope lookup.
 - [ ] Set environment variables/secrets.
-- [ ] Verify `/api/health`.
+- [ ] Verify `/api/health` with an actual Supabase Auth user JWT.
 - [ ] Verify TwitCasting credential test.
 - [ ] Verify comment polling job.
 - [ ] Verify reply generation job.
@@ -63,9 +71,11 @@
 - [x] Customer dashboard URL.
 - [x] Kit builder URL.
 - [x] OBS scene static URL.
+- [x] Customer dashboard explains required JWT and flow.
+- [x] Customer dashboard calls JWT customer API.
 - [x] OBS scene can receive API URL, stream ID, and scene token.
-- [ ] Connect dashboard to deployed API URL.
-- [ ] Access control verified against deployed API.
+- [ ] Connect owner dashboard to deployed admin API URL.
+- [ ] Access control verified against deployed API with a real user.
 - [ ] Emergency stop verified against deployed API.
 
 ## OBS test
@@ -94,6 +104,7 @@
 ## Data monetization readiness
 
 - [x] Tables for feedback, training permissions, and audit logs exist.
+- [x] Customer change requests are stored as product data.
 - [x] Service improvement consent can be saved separately.
 - [x] Model training consent can be saved separately.
 - [x] External data sales consent can be saved separately.
