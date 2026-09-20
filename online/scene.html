@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>イコエルAI OBS Scene</title>
+  <style>
+    :root{--blue:#3988ff;--text:#f8fbff;--bubble:#ffffff;--ink:#101828}*{box-sizing:border-box;letter-spacing:0}html,body{width:100%;height:100%;margin:0;overflow:hidden;background:transparent;font-family:"Yu Gothic UI",Meiryo,system-ui,sans-serif}.scene{position:relative;width:100vw;height:100vh;background:linear-gradient(90deg,rgba(0,0,0,0) 0 50%,rgba(4,8,14,.12) 50% 100%)}.comment-safe-zone{position:absolute;left:0;top:0;width:50vw;height:100vh;pointer-events:none}.character-zone{position:absolute;right:0;top:0;width:50vw;height:100vh;display:grid;place-items:end center;padding:4vh 3vw}.avatar{position:relative;width:min(46vw,720px);height:min(92vh,920px);display:grid;place-items:end center;filter:drop-shadow(0 24px 38px rgba(0,0,0,.38))}.avatar img{max-width:100%;max-height:100%;object-fit:contain}.blink,.mouth{position:absolute;opacity:0;pointer-events:none;background:rgba(6,8,12,.88);border-radius:999px;transition:opacity 45ms linear}.blink.left{left:42.5%;top:31.6%;width:7.5%;height:1.2%}.blink.right{left:53%;top:31.2%;width:7.4%;height:1.2%}.mouth{left:49.2%;top:42.3%;width:5.2%;height:1.7%;background:rgba(72,32,28,.92)}.avatar.blinking .blink{opacity:1}.avatar.talking .mouth{opacity:1;animation:talk .18s steps(2,end) infinite}.bubble{position:absolute;right:4vw;bottom:7vh;width:min(44vw,760px);min-height:110px;background:var(--bubble);color:var(--ink);border:3px solid #101828;border-radius:26px;padding:22px 28px;font-size:clamp(22px,2.2vw,38px);font-weight:850;line-height:1.45;box-shadow:0 22px 50px rgba(0,0,0,.26);opacity:0;transform:translateY(18px);transition:opacity .22s,transform .22s}.bubble:after{content:"";position:absolute;right:16%;bottom:-28px;border:15px solid transparent;border-top-color:#101828}.bubble:before{content:"";position:absolute;right:16.4%;bottom:-21px;border:12px solid transparent;border-top-color:white;z-index:2}.bubble.show{opacity:1;transform:translateY(0)}.nameplate{position:absolute;right:4vw;top:5vh;background:rgba(6,10,18,.78);border:1px solid rgba(86,145,255,.7);color:var(--text);border-radius:10px;padding:10px 14px;font-size:18px;font-weight:900;box-shadow:0 0 24px rgba(57,136,255,.24)}.status{position:absolute;right:4vw;top:calc(5vh + 54px);color:#9fb4d4;background:rgba(6,10,18,.68);border:1px solid rgba(86,145,255,.24);border-radius:8px;padding:7px 12px;font-size:13px}.debug{position:absolute;left:12px;bottom:10px;color:rgba(255,255,255,.36);font-size:11px}@keyframes talk{0%{transform:scaleY(.55)}100%{transform:scaleY(1.35)}}@media(max-aspect-ratio:4/3){.character-zone{width:56vw}.comment-safe-zone{width:44vw}.bubble{width:52vw;font-size:clamp(18px,3.2vw,32px)}}
+  </style>
+</head>
+<body>
+  <div class="scene">
+    <div class="comment-safe-zone" aria-hidden="true"></div>
+    <div class="nameplate">イコエルAI</div>
+    <div class="status" id="status">ONLINE SCENE / waiting</div>
+    <div class="character-zone">
+      <div class="avatar" id="avatar">
+        <img src="./eru-promo.png" alt="イコエルAI">
+        <div class="blink left"></div><div class="blink right"></div><div class="mouth"></div>
+      </div>
+    </div>
+    <div class="bubble" id="bubble">オンライン配信の準備、こっちで進めてる。</div>
+    <div class="debug">left 50% reserved for external comment viewer</div>
+  </div>
+  <script>
+    const avatar=document.getElementById('avatar');
+    const bubble=document.getElementById('bubble');
+    const status=document.getElementById('status');
+    const params=new URLSearchParams(location.search);
+    const apiBase=params.get('api')||'';
+    let cursor=0;
+    function blinkOnce(){avatar.classList.add('blinking');setTimeout(()=>avatar.classList.remove('blinking'),110+Math.random()*70)}
+    function scheduleBlink(){setTimeout(()=>{blinkOnce();scheduleBlink()},2200+Math.random()*4200)}
+    function speak(text,duration=4200){bubble.textContent=text;bubble.classList.add('show');avatar.classList.add('talking');status.textContent='ONLINE SCENE / speaking';setTimeout(()=>{avatar.classList.remove('talking');bubble.classList.remove('show');status.textContent='ONLINE SCENE / waiting'},duration)}
+    async function poll(){
+      if(!apiBase){setTimeout(poll,2500);return}
+      try{
+        const res=await fetch(`${apiBase.replace(/\/$/,'')}/api/scene/events?after=${cursor}`,{cache:'no-store'});
+        if(res.ok){const data=await res.json();for(const ev of data.events||[]){cursor=Math.max(cursor,Number(ev.id||cursor));speak(ev.reply||ev.text||'',Math.max(2200,Number(ev.duration_ms||4200)))}}
+      }catch(e){status.textContent='ONLINE SCENE / API offline'}
+      setTimeout(poll,1800);
+    }
+    window.addEventListener('message',event=>{if(typeof event.data?.reply==='string')speak(event.data.reply,event.data.duration_ms)});
+    scheduleBlink();
+    if(params.get('demo')==='1')setTimeout(()=>speak('リスナーのコメント、拾ったらただ返すだけじゃなくて話を広げる。イコエルAIはそこを育てる。'),800);
+    poll();
+  </script>
+</body>
+</html>
