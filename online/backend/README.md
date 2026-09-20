@@ -12,11 +12,13 @@ Hosted Node/Express API for イコエルAI online operation.
 
 ## Required environment variables
 
+Use `.env.example` as the provider variable template. Never commit real values.
+
 ```text
 ADMIN_API_TOKEN=
 JOB_TOKEN=
 SCENE_READ_TOKEN=
-SUPABASE_URL=
+SUPABASE_URL=https://lcnuxfvjownsmqvuagkd.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=
 TWITCASTING_USER_ID=l_xxx999
 TWITCASTING_CLIENT_ID=
@@ -30,8 +32,6 @@ TTS_API_KEY=
 TTS_VOICE=玄野武宏
 TTS_SPEAKER_ID=11
 ```
-
-Never commit real values.
 
 ## Auth model
 
@@ -52,18 +52,28 @@ Never commit real values.
 - `POST /api/streams/:id/resume`
 - `POST /api/feedback`
 
-## Deployment
+## Railway deployment
 
-Render Free prototype:
+1. Create a Railway project from `URA-NEWS/stream-op-git`.
+2. Railway reads root `railway.json`.
+3. Add variables from `online/backend/.env.example`.
+4. Deploy.
+5. Open the generated Railway domain and verify `/api/health`.
+6. Paste the Railway API URL into the owner dashboard API URL field.
+7. For OBS, use `scene.html?api=<Railway URL>&stream_id=<stream UUID>&token=<SCENE_READ_TOKEN>`.
 
-1. Create a new Render Web Service from this GitHub repository.
-2. Use root directory `online/backend`.
-3. Build command: `npm install`.
-4. Start command: `npm start`.
-5. Add environment variables.
-6. Verify `/api/health`.
+## Render deployment
 
-Docker-capable host:
+1. Open the root Render Blueprint URL.
+2. Create a new Render Web Service from this GitHub repository.
+3. Use root directory `online/backend` when creating manually.
+4. Build command: `npm install`.
+5. Start command: `npm start`.
+6. Add environment variables from `.env.example`.
+7. Verify `/api/health`.
+8. Paste the Render API URL into the owner dashboard API URL field.
+
+## Docker-capable host
 
 ```text
 docker build -t ikoeru-ai-online ./online/backend
