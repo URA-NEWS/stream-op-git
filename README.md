@@ -10,6 +10,7 @@
 - ユーザー管理画面: https://ura-news.github.io/stream-op-git/online/customer.html
 - 納品キット作成画面: https://ura-news.github.io/stream-op-git/online/kits.html
 - OBS画面: https://ura-news.github.io/stream-op-git/online/scene.html?demo=1&v=4
+- Render Blueprint: https://render.com/deploy?repo=https://github.com/URA-NEWS/stream-op-git
 
 ## 今の状態
 
@@ -18,6 +19,14 @@
 画面はオンラインで開ける。SupabaseのDBも作成済み。バックエンドAPIコードも作成済みで、管理API・ジョブAPIはトークン保護済み。
 
 ただし、コメント取得・AI返答・音声生成を動かすAPIサーバーがまだRender/Railwayなどにデプロイされていないため、実運用のAPI URLはまだない。
+
+## API URLを作る最短ルート
+
+1. Render Blueprintを開く。
+2. `URA-NEWS/stream-op-git` からWeb Serviceを作る。
+3. Renderの環境変数に秘密情報を入れる。
+4. Deploy後に発行される `https://...onrender.com` がAPI URL。
+5. 管理画面のAPI URL欄へ入れて `/api/health` を確認する。
 
 ## 完了済み
 
@@ -39,7 +48,7 @@
 - ユーザー管理画面作成済み。
 - 納品キット作成画面作成済み。
 - OBS画面は右側キャラ、左側コメビュ空き、瞬き、口パク、音声URL再生に対応。
-- Render用設定作成済み。
+- Render用ルート設定 `render.yaml` 作成済み。
 - Dockerfile作成済み。
 - GitHub Actions構文チェック作成済み。
 
