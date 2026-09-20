@@ -10,7 +10,8 @@
 - Secrets are not stored in GitHub.
 - Owner dashboard, customer console, kit builder, and OBS scene are online on GitHub Pages.
 - Secure Supabase Edge Function is deployed with JWT verification enabled.
-- Public OBS/job API still requires explicit approval because it needs JWT verification disabled and internal token authentication.
+- Tenant-scoped access token table exists for admin/job/scene authorization.
+- Public OBS/job API still needs deployment after implementing scoped-token lookup in the Edge Function.
 
 ## Online URLs
 
@@ -24,7 +25,8 @@
 
 1. Supabase Edge Function
    - Secure function exists.
-   - Public OBS/job version needs explicit approval for JWT-off plus token-auth mode.
+   - Tenant-scoped token DB exists.
+   - Public OBS/job version must use hashed token lookup and stream scoping.
 
 2. Render Free + Supabase Free
    - Lowest cost.
@@ -58,7 +60,8 @@
 - [x] Insert first tenant, character, and TwitCasting stream.
 - [x] Tables for feedback, training permissions, and audit logs exist.
 - [x] Deploy JWT-required Edge Function `ikoeru-secure`.
-- [ ] Deploy public OBS/job Edge Function after explicit approval.
+- [x] Add tenant-scoped `access_tokens` table.
+- [ ] Deploy scoped public OBS/job Edge Function.
 - [ ] Add production RLS policies per tenant before exposing browser writes.
 - [ ] Create storage bucket for generated voice audio and avatar assets.
 - [ ] Configure backups.
@@ -72,7 +75,8 @@
 - [x] Training permission endpoint exists.
 - [x] Render blueprint exists.
 - [x] Secure Supabase Edge API exists.
-- [ ] Public OBS/job API created.
+- [x] Tenant-scoped token storage exists.
+- [ ] Public OBS/job API created with token scope lookup.
 - [ ] Set environment variables/secrets.
 - [ ] Verify `/api/health`.
 - [ ] Verify TwitCasting credential test.
