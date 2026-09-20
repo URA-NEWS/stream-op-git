@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
+import { configureAdminRoutes } from './admin-routes.js';
 import { requireBearer, requireSceneTokenIfConfigured } from './auth.js';
 import { getComments, getCurrentLive, twitcastingConfigured } from './twitcasting.js';
 import { cleanReply, generateText } from './llm.js';
@@ -181,6 +182,8 @@ app.post('/api/feedback', async (req, res) => {
   if (error) return res.status(500).json({ ok: false, error: 'feedback_insert_failed' });
   res.json({ ok: true });
 });
+
+configureAdminRoutes(app, supabase, requireSupabase);
 
 app.use((_req, res) => res.status(404).json({ ok: false, error: 'not_found' }));
 
