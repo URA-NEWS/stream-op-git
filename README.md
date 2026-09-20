@@ -6,7 +6,7 @@
 
 ## 入口URL
 
-- 管理画面: https://ura-news.github.io/stream-op-git/online/index.html?v=6
+- 管理画面: https://ura-news.github.io/stream-op-git/online/index.html?v=7
 - ユーザー管理画面: https://ura-news.github.io/stream-op-git/online/customer.html?v=2
 - 変更依頼レビュー: https://ura-news.github.io/stream-op-git/online/review.html
 - データ収益化管理: https://ura-news.github.io/stream-op-git/online/data.html
@@ -15,7 +15,7 @@
 - Supabase安全API: https://lcnuxfvjownsmqvuagkd.functions.supabase.co/ikoeru-secure
 - Supabase顧客API: https://lcnuxfvjownsmqvuagkd.functions.supabase.co/ikoeru-customer-api
 - Render Blueprint: https://render.com/deploy?repo=https://github.com/URA-NEWS/stream-op-git
-- Railway Deploy: https://railway.com/new/template?template=https://github.com/URA-NEWS/stream-op-git
+- Railway Dashboard: https://railway.com/dashboard
 
 ## 今の状態
 
@@ -39,12 +39,15 @@ OBSや外部ジョブが直接呼べる公開APIは、サービスロールを�
 
 ### Railway
 
-1. Railwayで `URA-NEWS/stream-op-git` を選ぶ。
-2. ルートの `railway.json` が `online/backend` を起動する。
-3. `online/backend/.env.example` のキーをRailway Variablesへ入れる。
-4. Deploy後の `https://...up.railway.app` がAPI URL。
-5. 管理画面のAPI URL欄へ入れて `/api/readiness` を確認する。
-6. `missing` が空になり、`ok: true` になったら配信APIの土台は通る。
+1. Railway Dashboardを開く。
+2. New Projectを作る。
+3. Deploy from GitHub repoを選ぶ。
+4. `URA-NEWS/stream-op-git` を選ぶ。
+5. ルートの `railway.json` が `online/backend` を起動する。
+6. `online/backend/.env.example` のキーをRailway Variablesへ入れる。
+7. Deploy後の `https://...up.railway.app` がAPI URL。
+8. 管理画面のAPI URL欄へ入れて `/api/readiness` を確認する。
+9. `missing` が空になり、`ok: true` になったら配信APIの土台は通る。
 
 ### Render
 
