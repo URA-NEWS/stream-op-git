@@ -4,23 +4,24 @@ Base URL: production hosting provider URL.
 
 ## Auth
 
-- Public health route returns only coarse readiness.
-- Admin routes require `Authorization: Bearer $ADMIN_API_TOKEN`.
-- Scheduled/internal job routes require `Authorization: Bearer $JOB_TOKEN`.
-- OBS scene routes use `SCENE_READ_TOKEN` when configured.
-- Browser write routes must not expose service-role keys.
+- Public browser clients must never receive service-role keys.
+- Admin routes require tenant-scoped admin tokens.
+- Scheduled/internal job routes require tenant-scoped job tokens.
+- OBS scene routes require tenant-scoped scene tokens.
+- Tokens are stored hashed in `access_tokens` and scoped to `tenant_id`, optionally `stream_id`.
+- Browser write routes must check tenant and stream scope before reading or mutating data.
 
 ## Health
 
 `GET /api/health`
 
-Returns service, database, TwitCasting, LLM, and TTS readiness booleans.
+Returns service, database, TwitCasting, LLM, and TTS readiness booleans. Production may require admin token.
 
 ## Character
 
 `GET /api/characters/:id`
 
-Returns current character profile, prompt, voice, avatar, version. Requires admin token in the current backend.
+Returns current character profile, prompt, voice, avatar, version. Requires admin token scoped to the same tenant.
 
 `POST /api/characters/:id/propose`
 
@@ -39,7 +40,7 @@ Rolls back to a previous version.
 
 `GET /api/streams/:id/status`
 
-Returns platform connection, latest cursor, queue, emergency state.
+Returns platform connection, latest cursor, queue, emergency state. Requires admin token scoped to the stream tenant.
 
 `POST /api/streams/:id/emergency-stop`
 
@@ -57,27 +58,27 @@ Tests credentials stored in hosting environment. Never returns secrets. Requires
 
 `POST /api/jobs/twitcasting/poll`
 
-Scheduled/internal route. Reads new comments and stores them. Requires job token.
+Scheduled/internal route. Reads new comments and stores them. Requires job token scoped to the stream.
 
 ## Reply Pipeline
 
 `POST /api/jobs/replies/generate`
 
-Scheduled/internal route. Generates reply for queued comments. Requires job token.
+Scheduled/internal route. Generates reply for queued comments. Requires job token scoped to the tenant or stream.
 
 `POST /api/jobs/replies/synthesize`
 
-Scheduled/internal route. Generates audio. Requires job token.
+Scheduled/internal route. Generates audio. Requires job token scoped to the tenant or stream.
 
-`GET /api/scene/events?stream_id=...&after=0&token=...`
+`GET /api/scene/events?stream_id=...&after=0`
 
-OBS polling endpoint. Returns ordered speech events. Requires scene token when `SCENE_READ_TOKEN` is configured.
+OBS polling endpoint. Returns only events for the token-scoped stream. Requires scene token.
 
 ## Feedback and Learning
 
 `POST /api/feedback`
 
-Stores rating, correction, notes. Requires admin token in the current backend.
+Stores rating, correction, notes. Requires admin token scoped to the reply tenant.
 
 `POST /api/training/permissions`
 
@@ -97,6 +98,7 @@ Creates tenant, character template, OBS URL, management URL, and onboarding chec
 
 - No secrets in GitHub.
 - Tenant isolation on every route.
+- Stream tokens can only read that stream.
 - Audit log for all writes.
 - Version checks for character updates.
 - Emergency stop always available.
