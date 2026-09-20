@@ -29,21 +29,56 @@
     const status=document.getElementById('status');
     const params=new URLSearchParams(location.search);
     const apiBase=params.get('api')||'';
+    const streamId=params.get('stream_id')||'';
+    const sceneToken=params.get('token')||'';
     let cursor=0;
+    let speaking=false;
+    const queue=[];
     function blinkOnce(){if(!avatar.classList.contains('ready'))return;avatar.classList.add('blinking');setTimeout(()=>avatar.classList.remove('blinking'),110+Math.random()*70)}
     function scheduleBlink(){setTimeout(()=>{blinkOnce();scheduleBlink()},2200+Math.random()*4200)}
-    function speak(text,duration=4200){bubble.textContent=text;bubble.classList.add('show');if(avatar.classList.contains('ready'))avatar.classList.add('talking');status.textContent='ONLINE SCENE / speaking';setTimeout(()=>{avatar.classList.remove('talking');bubble.classList.remove('show');status.textContent='ONLINE SCENE / waiting'},duration)}
+    function finishSpeech(){avatar.classList.remove('talking');bubble.classList.remove('show');status.textContent='ONLINE SCENE / waiting';speaking=false;playNext()}
+    function speak(text,duration=4200,audioUrl=''){
+      queue.push({text,duration,audioUrl});
+      playNext();
+    }
+    function playNext(){
+      if(speaking||!queue.length)return;
+      speaking=true;
+      const item=queue.shift();
+      bubble.textContent=item.text;
+      bubble.classList.add('show');
+      if(avatar.classList.contains('ready'))avatar.classList.add('talking');
+      status.textContent='ONLINE SCENE / speaking';
+      if(item.audioUrl){
+        const audio=new Audio(item.audioUrl);
+        audio.onended=finishSpeech;
+        audio.onerror=()=>setTimeout(finishSpeech,item.duration);
+        audio.play().catch(()=>setTimeout(finishSpeech,item.duration));
+      }else{
+        setTimeout(finishSpeech,item.duration);
+      }
+    }
     async function poll(){
       if(!apiBase){setTimeout(poll,2500);return}
       try{
-        const res=await fetch(`${apiBase.replace(/\/$/,'')}/api/scene/events?after=${cursor}`,{cache:'no-store'});
-        if(res.ok){const data=await res.json();for(const ev of data.events||[]){cursor=Math.max(cursor,Number(ev.id||cursor));speak(ev.reply||ev.text||'',Math.max(2200,Number(ev.duration_ms||4200)))}}
+        const url=new URL(`${apiBase.replace(/\/$/,'')}/api/scene/events`);
+        url.searchParams.set('after',String(cursor));
+        if(streamId)url.searchParams.set('stream_id',streamId);
+        if(sceneToken)url.searchParams.set('token',sceneToken);
+        const res=await fetch(url,{cache:'no-store'});
+        if(res.ok){
+          const data=await res.json();
+          for(const ev of data.events||[]){
+            cursor=Math.max(cursor,Number(ev.id||cursor));
+            speak(ev.reply||ev.text||'',Math.max(2200,Number(ev.duration_ms||4200)),ev.audio_url||'');
+          }
+        }
       }catch(e){status.textContent='ONLINE SCENE / API offline'}
       setTimeout(poll,1800);
     }
     portrait.addEventListener('load',()=>{avatar.classList.add('ready');status.textContent='ONLINE SCENE / waiting'});
     portrait.addEventListener('error',()=>{status.textContent='ONLINE SCENE / avatar image missing';bubble.textContent='画像パスを確認中。イコエルAIの表示素材がまだ読めていない。';bubble.classList.add('show')});
-    window.addEventListener('message',event=>{if(typeof event.data?.reply==='string')speak(event.data.reply,event.data.duration_ms)});
+    window.addEventListener('message',event=>{if(typeof event.data?.reply==='string')speak(event.data.reply,event.data.duration_ms,event.data.audio_url||'')});
     scheduleBlink();
     if(params.get('demo')==='1')setTimeout(()=>speak('リスナーのコメント、拾ったらただ返すだけじゃなくて話を広げる。イコエルAIはそこを育てる。'),800);
     poll();
