@@ -25,7 +25,7 @@
 
 ## Online URLs
 
-- Owner dashboard: https://ura-news.github.io/stream-op-git/online/index.html?v=6
+- Owner dashboard: https://ura-news.github.io/stream-op-git/online/index.html?v=7
 - Customer console: https://ura-news.github.io/stream-op-git/online/customer.html?v=2
 - Change request review: https://ura-news.github.io/stream-op-git/online/review.html
 - Data monetization console: https://ura-news.github.io/stream-op-git/online/data.html
@@ -34,7 +34,7 @@
 - Secure Supabase Edge API: https://lcnuxfvjownsmqvuagkd.functions.supabase.co/ikoeru-secure
 - Customer Supabase Edge API: https://lcnuxfvjownsmqvuagkd.functions.supabase.co/ikoeru-customer-api
 - Render Blueprint: https://render.com/deploy?repo=https://github.com/URA-NEWS/stream-op-git
-- Railway Deploy: https://railway.com/new/template?template=https://github.com/URA-NEWS/stream-op-git
+- Railway Dashboard: https://railway.com/dashboard
 
 ## Supabase setup
 
@@ -110,6 +110,7 @@
 - [x] OBS scene can receive API URL, stream ID, and scene token.
 - [x] OBS avatar path uses GitHub Pages absolute path with raw fallback.
 - [x] Owner dashboard can call `/api/health` and `/api/readiness` for deployed API diagnosis.
+- [x] Owner dashboard links Railway Dashboard instead of the template marketplace.
 - [ ] Connect owner dashboard to deployed admin API URL.
 - [ ] Access control verified against deployed API with a real user.
 - [ ] Emergency stop verified against deployed API.
@@ -137,6 +138,16 @@
 - [ ] Confirm OBS event delivered.
 - [ ] Confirm duplicate comments are ignored.
 - [ ] Confirm reconnection does not replay old comments.
+
+## Railway deploy path
+
+- Open Railway Dashboard.
+- Create New Project.
+- Choose Deploy from GitHub repo.
+- Select `URA-NEWS/stream-op-git`.
+- Add variables from `online/backend/.env.example`.
+- Deploy and generate a public domain.
+- Paste the domain into the owner dashboard and run Readiness確認.
 
 ## Data monetization readiness
 
