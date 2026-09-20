@@ -6,10 +6,11 @@
 
 ## 入口URL
 
-- 管理画面: https://ura-news.github.io/stream-op-git/online/index.html?v=4
+- 管理画面: https://ura-news.github.io/stream-op-git/online/index.html?v=5
 - ユーザー管理画面: https://ura-news.github.io/stream-op-git/online/customer.html?v=2
+- 変更依頼レビュー: https://ura-news.github.io/stream-op-git/online/review.html
 - 納品キット作成画面: https://ura-news.github.io/stream-op-git/online/kits.html
-- OBS画面: https://ura-news.github.io/stream-op-git/online/scene.html?demo=1&v=4
+- OBS画面: https://ura-news.github.io/stream-op-git/online/scene.html?demo=1&v=5
 - Supabase安全API: https://lcnuxfvjownsmqvuagkd.functions.supabase.co/ikoeru-secure
 - Supabase顧客API: https://lcnuxfvjownsmqvuagkd.functions.supabase.co/ikoeru-customer-api
 - Render Blueprint: https://render.com/deploy?repo=https://github.com/URA-NEWS/stream-op-git
@@ -20,7 +21,9 @@
 
 画面はオンラインで開ける。SupabaseのDBも作成済み。JWT必須の安全APIと顧客管理APIもオンラインに作成済み。
 
-ユーザー管理画面は、顧客がSupabase JWTを入れて、自分に許可されたキャラクターと配信だけを読み込み、キャラの口調・会話設計・成長ルールの変更依頼を送れる形にした。変更依頼は直接本番キャラを書き換えず、`character_change_requests` に蓄積する。
+ユーザー管理画面は、顧客がSupabase JWTを入れて、自分に許可されたキャラクターと配信だけを読み込み、キャラの口調・会話設計・成長ルールの変更依頼を送れる形にした。変更依頼は直接本番キャラを書き換えず、`character_change_requests` に蓄積する。レビュー画面でその依頼を読める。
+
+OBS画面は左側を外部コメントビューア用に空け、右側にイコエルAI、吹き出し、瞬き、口パクを出す。画像パスはGitHub Pagesの絶対パスとrawフォールバックを持つ。
 
 OBSや外部ジョブが直接呼べる公開APIは、サービスロールを使う実装が安全判定で拒否されたため未公開。代わりに、テナントユーザーRLS、顧客変更依頼、学習許可、テナント/ストリーム別アクセストークンの土台を入れた。
 
@@ -52,6 +55,7 @@ OBSや外部ジョブが直接呼べる公開APIは、サービスロールを�
 - JWT必須のSupabase Edge Function `ikoeru-customer-api` 作成済み。
 - `tenant_users` と顧客管理用RLS作成済み。
 - `character_change_requests` と顧客変更依頼API作成済み。
+- 変更依頼レビュー画面作成済み。
 - 顧客の学習・外部提供許可保存API作成済み。
 - `access_tokens` とスコープ別トークン土台作成済み。
 - Node/Express APIコード作成済み。
@@ -74,7 +78,7 @@ OBSや外部ジョブが直接呼べる公開APIは、サービスロールを�
 
 1. OBS/ジョブ用APIを安全に公開する。
 2. Supabase Authに顧客ユーザーを紐づける。
-3. 管理側で `character_change_requests` の承認・適用画面を作る。
+3. 管理側で `character_change_requests` の承認・適用機能を作る。
 4. 秘密キーをSupabase SecretsまたはRender/Railway環境変数に入れる。
 5. `/api/health` を実JWTで確認する。
 6. TwitCasting接続テストをする。
