@@ -11,17 +11,24 @@
 - 納品キット作成画面: https://ura-news.github.io/stream-op-git/online/kits.html
 - OBS画面: https://ura-news.github.io/stream-op-git/online/scene.html?demo=1&v=4
 - Supabase安全API: https://lcnuxfvjownsmqvuagkd.functions.supabase.co/ikoeru-secure
+- Supabase顧客API: https://lcnuxfvjownsmqvuagkd.functions.supabase.co/ikoeru-customer-api
 - Render Blueprint: https://render.com/deploy?repo=https://github.com/URA-NEWS/stream-op-git
 
 ## 今の状態
 
 まだ完成品ではない。
 
-画面はオンラインで開ける。SupabaseのDBも作成済み。JWT必須の安全なSupabase Edge Functionも作成済み。
+画面はオンラインで開ける。SupabaseのDBも作成済み。JWT必須の安全APIと顧客管理APIもオンラインに作成済み。
 
-ただし、OBSや外部ジョブが直接呼べる本番APIは未公開。公開APIにするにはJWT検証なしにして、内部トークン `ADMIN_API_TOKEN` / `JOB_TOKEN` / `SCENE_READ_TOKEN` で守る必要がある。この設定は明示承認が必要。
+OBSや外部ジョブが直接呼べる公開APIは、サービスロールを使う実装が安全判定で拒否されたため未公開。代わりに、テナントユーザーRLSとテナント/ストリーム別アクセストークンの土台を入れた。
 
 ## API URLを作るルート
+
+### Supabase Edge Function
+
+- `ikoeru-secure`: JWT必須の安全確認API。
+- `ikoeru-customer-api`: JWT必須の顧客管理API。
+- OBS/ジョブ用の公開APIは、サービスロールなし、または十分に検証済みのスコープ付き実装にする必要がある。
 
 ### Render
 
@@ -30,12 +37,6 @@
 3. Renderの環境変数に秘密情報を入れる。
 4. Deploy後に発行される `https://...onrender.com` がAPI URL。
 5. 管理画面のAPI URL欄へ入れて `/api/health` を確認する。
-
-### Supabase Edge Function
-
-- 安全API `ikoeru-secure` は作成済み。
-- OBS/ジョブ用の公開API `ikoeru-api` は、JWT検証なし + 内部トークン認証で作る必要がある。
-- 明示承認後に公開可能。
 
 ## 完了済み
 
@@ -46,6 +47,9 @@
 - character `イコエルAI` 作成済み。
 - stream `twitcasting / l_xxx999` 作成済み。
 - JWT必須のSupabase Edge Function `ikoeru-secure` 作成済み。
+- JWT必須のSupabase Edge Function `ikoeru-customer-api` 作成済み。
+- `tenant_users` と顧客管理用RLS作成済み。
+- `access_tokens` とスコープ別トークン土台作成済み。
 - Node/Express APIコード作成済み。
 - TwitCastingコメント取得コード作成済み。
 - AI返答生成コード作成済み。
@@ -64,10 +68,10 @@
 
 ## まだ必要
 
-1. Render/Railwayへデプロイする、またはSupabase公開APIの明示承認を出す。
-2. ホスティング環境変数に秘密キーを入れる。
-3. `/api/health` を確認する。
-4. 管理画面にAPI URLを入れる。
+1. OBS/ジョブ用APIを安全に公開する。
+2. Supabase Authに顧客ユーザーを紐づける。
+3. 秘密キーをSupabase SecretsまたはRender/Railway環境変数に入れる。
+4. `/api/health` を確認する。
 5. TwitCasting接続テストをする。
 6. OBSに `online/scene.html` を入れて実配信テストする。
 7. 音声生成バックエンドを本番用に接続する。
