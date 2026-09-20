@@ -20,6 +20,7 @@
 - Retention policy route and export audit route exist.
 - Private Storage buckets exist for audio, avatars, and exports.
 - Consent revocation blocks future exports through latest-permission RLS.
+- Render and Railway deployment config exists for the Node backend.
 
 ## Online URLs
 
@@ -31,6 +32,7 @@
 - OBS scene: https://ura-news.github.io/stream-op-git/online/scene.html?demo=1&v=5
 - Secure Supabase Edge API: https://lcnuxfvjownsmqvuagkd.functions.supabase.co/ikoeru-secure
 - Customer Supabase Edge API: https://lcnuxfvjownsmqvuagkd.functions.supabase.co/ikoeru-customer-api
+- Render Blueprint: https://render.com/deploy?repo=https://github.com/URA-NEWS/stream-op-git
 
 ## Supabase setup
 
@@ -64,6 +66,8 @@
 - [x] Kit creation endpoint exists.
 - [x] Training permission endpoint exists.
 - [x] Render blueprint exists.
+- [x] Root Railway config exists.
+- [x] Backend `.env.example` exists.
 - [x] Secure Supabase Edge API exists.
 - [x] Customer Supabase Edge API exists.
 - [x] Tenant-scoped token storage exists.
@@ -74,9 +78,9 @@
 - [x] Customer data export request route exists.
 - [x] Customer retention policy route exists.
 - [x] Customer export audit route exists.
-- [ ] Public OBS/job API created with token scope lookup.
+- [ ] Deploy Node backend to Railway or Render.
 - [ ] Set environment variables/secrets.
-- [ ] Verify `/api/health` with an actual Supabase Auth user JWT.
+- [ ] Verify `/api/health` with the deployed API URL.
 - [ ] Verify TwitCasting credential test.
 - [ ] Verify comment polling job.
 - [ ] Verify reply generation job.
