@@ -6,14 +6,18 @@
 
 ## 入口URL
 
-- 管理画面の土台: https://ura-news.github.io/stream-op-git/online/index.html?v=3
-- OBS画面の土台: https://ura-news.github.io/stream-op-git/online/scene.html?demo=1&v=3
+- 管理画面: https://ura-news.github.io/stream-op-git/online/index.html?v=4
+- ユーザー管理画面: https://ura-news.github.io/stream-op-git/online/customer.html
+- 納品キット作成画面: https://ura-news.github.io/stream-op-git/online/kits.html
+- OBS画面: https://ura-news.github.io/stream-op-git/online/scene.html?demo=1&v=4
 
 ## 今の状態
 
 まだ完成品ではない。
 
-画面はオンラインで開ける。SupabaseのDBも作成済み。ただし、コメント取得・AI返答・音声生成を動かすAPIサーバーがまだネットにデプロイされていないため、管理画面に実API URLを入れても本番動作はしない。
+画面はオンラインで開ける。SupabaseのDBも作成済み。バックエンドAPIコードも作成済みで、管理API・ジョブAPIはトークン保護済み。
+
+ただし、コメント取得・AI返答・音声生成を動かすAPIサーバーがまだRender/Railwayなどにデプロイされていないため、実運用のAPI URLはまだない。
 
 ## 完了済み
 
@@ -29,6 +33,12 @@
 - イコエルAIの会話方針作成済み。
 - TTS接続コード作成済み。
 - 管理系APIとジョブAPIをトークン保護済み。
+- キャラ調整API作成済み。
+- 納品キット作成API作成済み。
+- 学習・収益化許可API作成済み。
+- ユーザー管理画面作成済み。
+- 納品キット作成画面作成済み。
+- OBS画面は右側キャラ、左側コメビュ空き、瞬き、口パク、音声URL再生に対応。
 - Render用設定作成済み。
 - Dockerfile作成済み。
 - GitHub Actions構文チェック作成済み。
@@ -41,8 +51,8 @@
 4. 管理画面にAPI URLを入れる。
 5. TwitCasting接続テストをする。
 6. OBSに `online/scene.html` を入れて実配信テストする。
-7. 顧客用管理画面と納品キット作成フローを実装する。
-8. 学習・収益化用データの同意UI、エクスポート、監査ログを完成させる。
+7. 音声生成バックエンドを本番用に接続する。
+8. データエクスポートとバックアップを本番用に固める。
 
 ## GitHubに入れない秘密情報
 
@@ -57,6 +67,7 @@ Render/Railway/Supabaseなどの環境変数へ入れる。
 - `TWITCASTING_CLIENT_SECRET`
 - `LLM_API_KEY`
 - `TTS_API_KEY`
+- `TTS_BASE_URL`
 
 ## 完成条件
 
