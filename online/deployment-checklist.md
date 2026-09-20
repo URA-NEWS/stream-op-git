@@ -10,8 +10,9 @@
 - Secrets are not stored in GitHub.
 - Owner dashboard, customer console, kit builder, and OBS scene are online on GitHub Pages.
 - Secure Supabase Edge Function is deployed with JWT verification enabled.
+- Customer Supabase Edge Function is deployed with JWT verification enabled.
 - Tenant-scoped access token table exists for admin/job/scene authorization.
-- Public OBS/job API still needs deployment after implementing scoped-token lookup in the Edge Function.
+- Tenant user membership and RLS exist for customer console reads.
 
 ## Online URLs
 
@@ -20,38 +21,7 @@
 - Kit builder: https://ura-news.github.io/stream-op-git/online/kits.html
 - OBS scene: https://ura-news.github.io/stream-op-git/online/scene.html?demo=1&v=4
 - Secure Supabase Edge API: https://lcnuxfvjownsmqvuagkd.functions.supabase.co/ikoeru-secure
-
-## Provider decision
-
-1. Supabase Edge Function
-   - Secure function exists.
-   - Tenant-scoped token DB exists.
-   - Public OBS/job version must use hashed token lookup and stream scoping.
-
-2. Render Free + Supabase Free
-   - Lowest cost.
-   - May sleep or throttle.
-   - Good for prototype and owner testing.
-
-3. Railway
-   - Requires login.
-   - Existing workspace may be paid Hobby plan.
-
-## Secrets to configure in hosting provider
-
-- `ADMIN_API_TOKEN`
-- `JOB_TOKEN`
-- `SCENE_READ_TOKEN`
-- `AUTH_SECRET`
-- `SUPABASE_URL`
-- `SUPABASE_SERVICE_ROLE_KEY`
-- `TWITCASTING_CLIENT_ID`
-- `TWITCASTING_CLIENT_SECRET`
-- `LLM_API_KEY`
-- `TTS_API_KEY`
-- `TTS_BASE_URL`
-- `PUBLIC_BASIC_AUTH_PASSWORD`
-- `BACKUP_ENCRYPTION_KEY`
+- Customer Supabase Edge API: https://lcnuxfvjownsmqvuagkd.functions.supabase.co/ikoeru-customer-api
 
 ## Supabase setup
 
@@ -60,9 +30,11 @@
 - [x] Insert first tenant, character, and TwitCasting stream.
 - [x] Tables for feedback, training permissions, and audit logs exist.
 - [x] Deploy JWT-required Edge Function `ikoeru-secure`.
+- [x] Deploy JWT-required Edge Function `ikoeru-customer-api`.
 - [x] Add tenant-scoped `access_tokens` table.
-- [ ] Deploy scoped public OBS/job Edge Function.
-- [ ] Add production RLS policies per tenant before exposing browser writes.
+- [x] Add `tenant_users` membership table.
+- [x] Add customer console RLS select policies.
+- [ ] Add write policies for customer-approved character changes.
 - [ ] Create storage bucket for generated voice audio and avatar assets.
 - [ ] Configure backups.
 
@@ -75,6 +47,7 @@
 - [x] Training permission endpoint exists.
 - [x] Render blueprint exists.
 - [x] Secure Supabase Edge API exists.
+- [x] Customer Supabase Edge API exists.
 - [x] Tenant-scoped token storage exists.
 - [ ] Public OBS/job API created with token scope lookup.
 - [ ] Set environment variables/secrets.
