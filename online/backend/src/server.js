@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { getComments, getCurrentLive, twitcastingConfigured } from './twitcasting.js';
 import { cleanReply, generateText } from './llm.js';
 import { buildIkoeruPrompt, fallbackReply } from './reply-policy.js';
+import { synthesizeSpeech } from './tts.js';
 
 const app = express();
 const port = Number(process.env.PORT || 3000);
@@ -28,7 +29,7 @@ function publicConfigState() {
     supabase: Boolean(supabase),
     twitcasting: twitcastingConfigured(),
     llm: Boolean(process.env.LLM_PROVIDER && process.env.LLM_API_KEY),
-    tts: Boolean(process.env.TTS_PROVIDER && process.env.TTS_API_KEY),
+    tts: Boolean(process.env.TTS_PROVIDER && (process.env.TTS_API_KEY || process.env.TTS_PROVIDER === 'none')),
   };
 }
 
@@ -108,6 +109,23 @@ app.post('/api/jobs/replies/generate', async (_req, res) => {
     if (!result.error) generated += 1;
   }
   res.json({ ok: true, generated });
+});
+
+app.post('/api/jobs/replies/synthesize', async (_req, res) => {
+  if (!requireSupabase(res)) return;
+  const { data: replies, error } = await supabase.from('replies').select('id,reply,audio_url').is('audio_url', null).eq('status', 'queued').order('created_at', { ascending: true }).limit(5);
+  if (error) return res.status(500).json({ ok: false, error: 'reply_query_failed' });
+  let synthesized = 0;
+  for (const reply of replies || []) {
+    try {
+      const speech = await synthesizeSpeech(reply.reply);
+      await supabase.from('replies').update({ audio_url: speech.audio_url || null, tts_voice: process.env.TTS_VOICE || '玄野武宏' }).eq('id', reply.id);
+      synthesized += 1;
+    } catch (_error) {
+      await supabase.from('replies').update({ tts_voice: 'pending' }).eq('id', reply.id);
+    }
+  }
+  res.json({ ok: true, synthesized });
 });
 
 app.get('/api/characters/:id', async (req, res) => {
