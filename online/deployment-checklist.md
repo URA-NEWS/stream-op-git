@@ -8,8 +8,9 @@
 - Ikoeru tenant created: `ikoeru-ai`
 - First stream target: `twitcasting / l_xxx999`
 - Secrets are not stored in GitHub.
-- Backend API code is prepared but not deployed to a public runtime yet.
 - Owner dashboard, customer console, kit builder, and OBS scene are online on GitHub Pages.
+- Secure Supabase Edge Function is deployed with JWT verification enabled.
+- Public OBS/job API still requires explicit approval because it needs JWT verification disabled and internal token authentication.
 
 ## Online URLs
 
@@ -17,23 +18,22 @@
 - Customer console: https://ura-news.github.io/stream-op-git/online/customer.html
 - Kit builder: https://ura-news.github.io/stream-op-git/online/kits.html
 - OBS scene: https://ura-news.github.io/stream-op-git/online/scene.html?demo=1&v=4
+- Secure Supabase Edge API: https://lcnuxfvjownsmqvuagkd.functions.supabase.co/ikoeru-secure
 
 ## Provider decision
 
-Choose one before API deployment:
+1. Supabase Edge Function
+   - Secure function exists.
+   - Public OBS/job version needs explicit approval for JWT-off plus token-auth mode.
 
-1. Render Free + Supabase Free
+2. Render Free + Supabase Free
    - Lowest cost.
    - May sleep or throttle.
    - Good for prototype and owner testing.
 
-2. Railway
-   - Existing workspace is Hobby plan.
-   - Do not deploy until owner accepts possible cost and confirms which project to use.
-
-3. VPS
-   - Best for VOICEVOX/Ollama always-on.
-   - Not free.
+3. Railway
+   - Requires login.
+   - Existing workspace may be paid Hobby plan.
 
 ## Secrets to configure in hosting provider
 
@@ -57,6 +57,8 @@ Choose one before API deployment:
 - [x] Run `online/supabase-schema.sql` as migration.
 - [x] Insert first tenant, character, and TwitCasting stream.
 - [x] Tables for feedback, training permissions, and audit logs exist.
+- [x] Deploy JWT-required Edge Function `ikoeru-secure`.
+- [ ] Deploy public OBS/job Edge Function after explicit approval.
 - [ ] Add production RLS policies per tenant before exposing browser writes.
 - [ ] Create storage bucket for generated voice audio and avatar assets.
 - [ ] Configure backups.
@@ -69,8 +71,9 @@ Choose one before API deployment:
 - [x] Kit creation endpoint exists.
 - [x] Training permission endpoint exists.
 - [x] Render blueprint exists.
-- [ ] Create API server project.
-- [ ] Set environment variables.
+- [x] Secure Supabase Edge API exists.
+- [ ] Public OBS/job API created.
+- [ ] Set environment variables/secrets.
 - [ ] Verify `/api/health`.
 - [ ] Verify TwitCasting credential test.
 - [ ] Verify comment polling job.
