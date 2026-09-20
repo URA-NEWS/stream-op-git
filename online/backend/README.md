@@ -36,6 +36,7 @@ TTS_SPEAKER_ID=11
 ## Auth model
 
 - `GET /api/health` is public and returns only configuration booleans.
+- `GET /api/readiness` is public and returns only missing environment variable names, weak token names, database state, and next actions. It never returns secret values.
 - Admin operations require `Authorization: Bearer $ADMIN_API_TOKEN`.
 - Scheduled jobs require `Authorization: Bearer $JOB_TOKEN`.
 - OBS scene events require `SCENE_READ_TOKEN` only when that variable is configured. Pass it as `?token=...` or a Bearer token.
@@ -43,6 +44,7 @@ TTS_SPEAKER_ID=11
 ## Endpoints
 
 - `GET /api/health`
+- `GET /api/readiness`
 - `POST /api/integrations/twitcasting/test`
 - `POST /api/jobs/twitcasting/poll`
 - `POST /api/jobs/replies/generate`
@@ -59,8 +61,9 @@ TTS_SPEAKER_ID=11
 3. Add variables from `online/backend/.env.example`.
 4. Deploy.
 5. Open the generated Railway domain and verify `/api/health`.
-6. Paste the Railway API URL into the owner dashboard API URL field.
-7. For OBS, use `scene.html?api=<Railway URL>&stream_id=<stream UUID>&token=<SCENE_READ_TOKEN>`.
+6. Open `/api/readiness`; fill every variable listed under `missing` until `ok` becomes `true`.
+7. Paste the Railway API URL into the owner dashboard API URL field.
+8. For OBS, use `scene.html?api=<Railway URL>&stream_id=<stream UUID>&token=<SCENE_READ_TOKEN>`.
 
 ## Render deployment
 
@@ -71,7 +74,8 @@ TTS_SPEAKER_ID=11
 5. Start command: `npm start`.
 6. Add environment variables from `.env.example`.
 7. Verify `/api/health`.
-8. Paste the Render API URL into the owner dashboard API URL field.
+8. Open `/api/readiness`; fill every variable listed under `missing` until `ok` becomes `true`.
+9. Paste the Render API URL into the owner dashboard API URL field.
 
 ## Docker-capable host
 
