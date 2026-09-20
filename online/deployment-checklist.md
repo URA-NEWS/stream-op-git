@@ -9,6 +9,14 @@
 - First stream target: `twitcasting / l_xxx999`
 - Secrets are not stored in GitHub.
 - Backend API code is prepared but not deployed to a public runtime yet.
+- Owner dashboard, customer console, kit builder, and OBS scene are online on GitHub Pages.
+
+## Online URLs
+
+- Owner dashboard: https://ura-news.github.io/stream-op-git/online/index.html?v=4
+- Customer console: https://ura-news.github.io/stream-op-git/online/customer.html
+- Kit builder: https://ura-news.github.io/stream-op-git/online/kits.html
+- OBS scene: https://ura-news.github.io/stream-op-git/online/scene.html?demo=1&v=4
 
 ## Provider decision
 
@@ -48,6 +56,7 @@ Choose one before API deployment:
 - [x] Use existing project `Tool`.
 - [x] Run `online/supabase-schema.sql` as migration.
 - [x] Insert first tenant, character, and TwitCasting stream.
+- [x] Tables for feedback, training permissions, and audit logs exist.
 - [ ] Add production RLS policies per tenant before exposing browser writes.
 - [ ] Create storage bucket for generated voice audio and avatar assets.
 - [ ] Configure backups.
@@ -56,6 +65,9 @@ Choose one before API deployment:
 
 - [x] Backend code exists.
 - [x] Admin/job endpoints require bearer tokens.
+- [x] Character propose/apply/rollback endpoints exist.
+- [x] Kit creation endpoint exists.
+- [x] Training permission endpoint exists.
 - [x] Render blueprint exists.
 - [ ] Create API server project.
 - [ ] Set environment variables.
@@ -68,11 +80,13 @@ Choose one before API deployment:
 ## Frontend deployment
 
 - [x] Owner dashboard static URL.
+- [x] Customer dashboard URL.
+- [x] Kit builder URL.
 - [x] OBS scene static URL.
-- [ ] Customer dashboard URL.
+- [x] OBS scene can receive API URL, stream ID, and scene token.
 - [ ] Connect dashboard to deployed API URL.
-- [ ] Access control verified.
-- [ ] Emergency stop verified.
+- [ ] Access control verified against deployed API.
+- [ ] Emergency stop verified against deployed API.
 
 ## OBS test
 
@@ -81,6 +95,7 @@ Choose one before API deployment:
 - [x] Place イコエルAI on the right.
 - [x] Speech bubble does not cover left comment viewer.
 - [x] Blink/lip-sync hooks implemented.
+- [x] Audio URL playback implemented.
 - [ ] Confirm avatar image renders after GitHub Pages cache refresh.
 - [ ] Confirm emergency stop clears speech/audio through deployed API.
 
@@ -99,8 +114,9 @@ Choose one before API deployment:
 ## Data monetization readiness
 
 - [x] Tables for feedback, training permissions, and audit logs exist.
-- [ ] Service improvement consent separated from external sale consent in UI.
-- [ ] Model training consent separated from both in UI.
+- [x] Service improvement consent can be saved separately.
+- [x] Model training consent can be saved separately.
+- [x] External data sales consent can be saved separately.
 - [ ] Retention period visible.
 - [ ] Revocation removes future exports.
 - [ ] Exports are tenant-scoped.
