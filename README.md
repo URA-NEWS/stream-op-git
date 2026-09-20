@@ -6,7 +6,7 @@
 
 ## 入口URL
 
-- 管理画面: https://ura-news.github.io/stream-op-git/online/index.html?v=5
+- 管理画面: https://ura-news.github.io/stream-op-git/online/index.html?v=6
 - ユーザー管理画面: https://ura-news.github.io/stream-op-git/online/customer.html?v=2
 - 変更依頼レビュー: https://ura-news.github.io/stream-op-git/online/review.html
 - データ収益化管理: https://ura-news.github.io/stream-op-git/online/data.html
@@ -15,6 +15,7 @@
 - Supabase安全API: https://lcnuxfvjownsmqvuagkd.functions.supabase.co/ikoeru-secure
 - Supabase顧客API: https://lcnuxfvjownsmqvuagkd.functions.supabase.co/ikoeru-customer-api
 - Render Blueprint: https://render.com/deploy?repo=https://github.com/URA-NEWS/stream-op-git
+- Railway Deploy: https://railway.com/new/template?template=https://github.com/URA-NEWS/stream-op-git
 
 ## 今の状態
 
@@ -22,7 +23,7 @@
 
 画面はオンラインで開ける。SupabaseのDBも作成済み。JWT必須の安全APIと顧客管理APIもオンラインに作成済み。
 
-配信APIは `online/backend` にあり、Render用 `render.yaml`、Railway用 `railway.json`、環境変数テンプレ `online/backend/.env.example` を用意済み。RailwayまたはRenderで環境変数を入れれば `/api/health` から確認できる。
+配信APIは `online/backend` にあり、Render用 `render.yaml`、Railway用 `railway.json`、環境変数テンプレ `online/backend/.env.example` を用意済み。RailwayまたはRenderで環境変数を入れれば `/api/health` と `/api/readiness` から確認できる。
 
 ユーザー管理画面は、顧客がSupabase JWTを入れて、自分に許可されたキャラクターと配信だけを読み込み、キャラの口調・会話設計・成長ルールの変更依頼を送れる形にした。変更依頼は直接本番キャラを書き換えず、`character_change_requests` に蓄積する。レビュー画面で依頼を読み、owner/operator JWTで適用・却下できる。適用時はキャラの旧版スナップショットを `character_versions` に保存してからプロンプトを更新する。
 
@@ -42,7 +43,8 @@ OBSや外部ジョブが直接呼べる公開APIは、サービスロールを�
 2. ルートの `railway.json` が `online/backend` を起動する。
 3. `online/backend/.env.example` のキーをRailway Variablesへ入れる。
 4. Deploy後の `https://...up.railway.app` がAPI URL。
-5. 管理画面のAPI URL欄へ入れて `/api/health` を確認する。
+5. 管理画面のAPI URL欄へ入れて `/api/readiness` を確認する。
+6. `missing` が空になり、`ok: true` になったら配信APIの土台は通る。
 
 ### Render
 
@@ -50,7 +52,8 @@ OBSや外部ジョブが直接呼べる公開APIは、サービスロールを�
 2. `URA-NEWS/stream-op-git` からWeb Serviceを作る。
 3. Renderの環境変数に秘密情報を入れる。
 4. Deploy後に発行される `https://...onrender.com` がAPI URL。
-5. 管理画面のAPI URL欄へ入れて `/api/health` を確認する。
+5. 管理画面のAPI URL欄へ入れて `/api/readiness` を確認する。
+6. `missing` が空になり、`ok: true` になったら配信APIの土台は通る。
 
 ## 完了済み
 
@@ -78,6 +81,8 @@ OBSや外部ジョブが直接呼べる公開APIは、サービスロールを�
 - Node/Express APIコード作成済み。
 - Railway用 `railway.json` 作成済み。
 - 環境変数テンプレ `.env.example` 作成済み。
+- バックエンドReadiness診断API作成済み。
+- 管理画面からReadiness確認に対応済み。
 - TwitCastingコメント取得コード作成済み。
 - AI返答生成コード作成済み。
 - イコエルAIの会話方針作成済み。
@@ -98,7 +103,7 @@ OBSや外部ジョブが直接呼べる公開APIは、サービスロールを�
 1. RailwayまたはRenderで配信APIをデプロイする。
 2. Supabase Authに顧客ユーザーを紐づける。
 3. 秘密キーをSupabase SecretsまたはRender/Railway環境変数に入れる。
-4. `/api/health` を実API URLで確認する。
+4. `/api/readiness` を実API URLで確認する。
 5. TwitCasting接続テストをする。
 6. OBSに `online/scene.html` を入れて実配信テストする。
 7. 音声生成バックエンドを本番用に接続する。
@@ -123,6 +128,7 @@ Render/Railway/Supabaseなどの環境変数へ入れる。
 
 - ネット上のAPI URLが生きている。
 - 管理画面がAPIにつながる。
+- `/api/readiness` が `ok: true` を返す。
 - ユーザー管理画面が実JWTで顧客データを読める。
 - 顧客の変更依頼と学習許可がSupabaseに保存される。
 - 承認済み変更依頼がキャラ設定へ安全に適用される。
