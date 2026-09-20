@@ -9,6 +9,12 @@ services:
     envVars:
       - key: APP_ENV
         value: production
+      - key: ADMIN_API_TOKEN
+        generateValue: true
+      - key: JOB_TOKEN
+        generateValue: true
+      - key: SCENE_READ_TOKEN
+        generateValue: true
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_SERVICE_ROLE_KEY
@@ -26,4 +32,6 @@ services:
       - key: TTS_PROVIDER
         sync: false
       - key: TTS_API_KEY
+        sync: false
+      - key: TTS_BASE_URL
         sync: false
