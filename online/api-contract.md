@@ -90,11 +90,15 @@ Upserts retention policy for one data type and purpose. Requires tenant role `ow
 
 Lists tenant-scoped export audit events.
 
-## Health
+## Backend health and readiness
 
 `GET /api/health`
 
-Returns service, database, TwitCasting, LLM, and TTS readiness booleans. Production may require admin token.
+Returns service, database, TwitCasting, LLM, TTS, and scene-token readiness booleans. It does not return secret values.
+
+`GET /api/readiness`
+
+Returns production readiness for the deployed Node backend. It returns only safe metadata: missing environment variable names, weak token names, database state, configuration booleans, and next actions. It returns `200` when ready and `503` while missing required setup.
 
 ## Character
 
