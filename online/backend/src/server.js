@@ -84,12 +84,16 @@ app.post('/api/jobs/twitcasting/poll', async (_req, res) => {
 
 app.post('/api/jobs/replies/generate', async (_req, res) => {
   if (!requireSupabase(res)) return;
-  const { data: comments, error } = await supabase.from('comments').select('*, streams(character_id, emergency_stop), replies(id)').is('replies.id', null).order('received_at', { ascending: true }).limit(5);
+  const { data: comments, error } = await supabase.from('comments').select('*').order('received_at', { ascending: true }).limit(10);
   if (error) return res.status(500).json({ ok: false, error: 'comment_query_failed' });
   let generated = 0;
   for (const comment of comments || []) {
-    if (comment.streams?.emergency_stop) continue;
-    const characterId = comment.streams?.character_id;
+    const existing = await supabase.from('replies').select('id').eq('comment_id', comment.id).limit(1).maybeSingle();
+    if (existing.data) continue;
+    const streamResult = await supabase.from('streams').select('*').eq('id', comment.stream_id).single();
+    const stream = streamResult.data;
+    if (!stream || stream.emergency_stop) continue;
+    const characterId = stream.character_id;
     const { data: character } = await supabase.from('characters').select('*').eq('id', characterId).single();
     const prompt = buildIkoeruPrompt({ character, comment: comment.body, viewerName: comment.viewer_name });
     let reply = '';
