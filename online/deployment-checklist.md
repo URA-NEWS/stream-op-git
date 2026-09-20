@@ -21,10 +21,11 @@
 - Private Storage buckets exist for audio, avatars, and exports.
 - Consent revocation blocks future exports through latest-permission RLS.
 - Render and Railway deployment config exists for the Node backend.
+- Node backend readiness diagnostics exist.
 
 ## Online URLs
 
-- Owner dashboard: https://ura-news.github.io/stream-op-git/online/index.html?v=5
+- Owner dashboard: https://ura-news.github.io/stream-op-git/online/index.html?v=6
 - Customer console: https://ura-news.github.io/stream-op-git/online/customer.html?v=2
 - Change request review: https://ura-news.github.io/stream-op-git/online/review.html
 - Data monetization console: https://ura-news.github.io/stream-op-git/online/data.html
@@ -33,6 +34,7 @@
 - Secure Supabase Edge API: https://lcnuxfvjownsmqvuagkd.functions.supabase.co/ikoeru-secure
 - Customer Supabase Edge API: https://lcnuxfvjownsmqvuagkd.functions.supabase.co/ikoeru-customer-api
 - Render Blueprint: https://render.com/deploy?repo=https://github.com/URA-NEWS/stream-op-git
+- Railway Deploy: https://railway.com/new/template?template=https://github.com/URA-NEWS/stream-op-git
 
 ## Supabase setup
 
@@ -78,9 +80,12 @@
 - [x] Customer data export request route exists.
 - [x] Customer retention policy route exists.
 - [x] Customer export audit route exists.
+- [x] `/api/readiness` exists and reports missing safe variable names only.
+- [x] Backend CI checks new readiness code.
 - [ ] Deploy Node backend to Railway or Render.
 - [ ] Set environment variables/secrets.
 - [ ] Verify `/api/health` with the deployed API URL.
+- [ ] Verify `/api/readiness` returns `ok: true`.
 - [ ] Verify TwitCasting credential test.
 - [ ] Verify comment polling job.
 - [ ] Verify reply generation job.
@@ -104,6 +109,7 @@
 - [x] Data console shows export audit events.
 - [x] OBS scene can receive API URL, stream ID, and scene token.
 - [x] OBS avatar path uses GitHub Pages absolute path with raw fallback.
+- [x] Owner dashboard can call `/api/health` and `/api/readiness` for deployed API diagnosis.
 - [ ] Connect owner dashboard to deployed admin API URL.
 - [ ] Access control verified against deployed API with a real user.
 - [ ] Emergency stop verified against deployed API.
@@ -151,6 +157,7 @@
 Online rollout is complete only when:
 
 - A network API URL is live.
+- `/api/readiness` returns `ok: true`.
 - Admin/customer/OBS URLs work against the live API.
 - TwitCasting live comments create replies.
 - Audio and avatar animation work in OBS.
