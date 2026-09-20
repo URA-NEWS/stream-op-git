@@ -48,6 +48,14 @@ Input:
 
 Stores a pending request. It does not directly rewrite the production character.
 
+`POST /api/customer/change-requests/:id/apply`
+
+Applies a pending request to the character prompt. Requires tenant role `owner` or `operator`. Stores the previous character snapshot in `character_versions` before updating.
+
+`POST /api/customer/change-requests/:id/reject`
+
+Rejects a pending request. Requires tenant role `owner` or `operator`.
+
 `POST /api/customer/training-permissions`
 
 Input:
@@ -61,6 +69,26 @@ Input:
 ```
 
 Stores explicit consent for one purpose. Requires tenant role `owner` or `operator`.
+
+`GET /api/customer/data-exports`
+
+Lists tenant-scoped data export requests.
+
+`POST /api/customer/data-exports`
+
+Creates a data export request only when matching active consent exists. Requires tenant role `owner` or `operator`.
+
+`GET /api/customer/retention-policies`
+
+Lists tenant-scoped retention policies.
+
+`POST /api/customer/retention-policies`
+
+Upserts retention policy for one data type and purpose. Requires tenant role `owner` or `operator`.
+
+`GET /api/customer/export-audit-events`
+
+Lists tenant-scoped export audit events.
 
 ## Health
 
@@ -156,3 +184,5 @@ Creates tenant, character template, OBS URL, management URL, and onboarding chec
 - Version checks for character updates.
 - Emergency stop always available.
 - Data sale/model training disabled until explicit permission exists.
+- Export requests require matching active consent.
+- Retention policies are tenant scoped.
