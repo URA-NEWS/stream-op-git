@@ -7,3 +7,11 @@
 Edit this 16:9 illustrated room into a CUTE MAN'S LIVESTREAMING / GAMING ROOM with a friendly Batman-inspired bat theme. Keep the cozy hand drawn cartoon illustration style, broad clear foreground floor, and the circular moon/star window in the UPPER RIGHT in the same position. Remove the pink bow curtains, heart decorations and heart cushions; replace with charcoal/navy simple curtains and small black/yellow bat-wing cushions. Masculine but cute and rounded, not scary or militaristic. Add a compact STREAMING DESK against the LEFT BACK WALL: two monitors showing abstract blue/purple gradients without text, small RGB keyboard, a black microphone on a boom arm, headphones hanging on the desk, a small black PC tower with soft cyan light, and a low black/grey rounded gaming chair tucked at the desk. Equipment stays in the BACK LEFT area, not blocking the center foreground space reserved for a lying mascot. Palette charcoal, slate blue, restrained cyan and warm muted amber; yellow bat accents, no pink hearts. Keep small warm lamp lighting and moonlit window. NO PEOPLE, NO MASCOT, NO WORDS, no branded product text, no watermark. High quality finished 1920x1080 16:9 streaming background.
 
 おなら音: 48kHz/16bit/monoの手続き的な合成音。0.78秒。外部の音源や人の録音は使用していません。
+
+
+Real-recorded fart effect (replaces procedural fart.wav in playback):
+Fart (real) — shaundoogan, Freesound sound 465486, 2019-04-02.
+https://freesound.org/people/shaundoogan/sounds/465486/
+Public HQ MP3 preview: https://cdn.freesound.org/previews/465/465486_3901896-hq.mp3
+License: CC0 1.0 Universal — https://creativecommons.org/publicdomain/zero/1.0/
+Motion colors are matched at render initialization to the original body; alpha and anatomy are preserved.

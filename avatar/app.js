@@ -8,7 +8,8 @@ let cfg={...defaults}, socket, ready=false, retry, intentional=false, seq=0, wai
 let rmsDb=-100,mouthPhase=0,manualBlinkUntil=0,lastShownGesture='';
 let db=-100, lastMeter=0, speaking=false, holdUntil=0, testUntil=0, gesture='normal', gestureUntil=0;
 let nextGesture=performance.now()+50000, blinkUntil=0, nextBlink=performance.now()+2500, lastFrame=0, bounce=0;
-let fartStart=-10000;let persistTimer=null,liveSettingsTimer=null;
+let fartStart=-10000;let persistTimer=null,liveSettingsFrame=null;
+const clientId=crypto.randomUUID();let settingsSequence=0;const receivedSettings=new Map();let paletteReport={};
 let calibration=null, images={}, imagesReady=false, lastError='';
 const system='bat-pngtuber-v3', slot='bat-pngtuber-v3';
 let port=Number(hash.get('port'))||4455;
@@ -40,16 +41,14 @@ async function connect(){
  if(e.code===4009){if(dock)$('connectPanel').open=true;setNotice('OBSのWebSocketパスワードを入力してください。');}
  if(!intentional)retry=setTimeout(connect,e.code===4009?10000:2500);};
 }
-function applySettings(next){cfg={...cfg,...next};cfg.threshold=Math.max(-60,Math.min(-15,Number(cfg.threshold)||-42));cfg.scale=Math.max(30,Math.min(200,Number(cfg.scale)||100));cfg.posX=Math.max(-960,Math.min(960,Number(cfg.posX)||0));cfg.posY=Math.max(-540,Math.min(540,Number(cfg.posY)||0));cfg.sfxVolume=Math.max(0,Math.min(100,Number(cfg.sfxVolume)||0));if(dock){
+function applySettings(next){const previousMic=cfg.mic;cfg={...cfg,...next};cfg.threshold=Math.max(-60,Math.min(-15,Number(cfg.threshold)||-42));cfg.scale=Math.max(30,Math.min(200,Number(cfg.scale)||100));cfg.posX=Math.max(-960,Math.min(960,Number(cfg.posX)||0));cfg.posY=Math.max(-540,Math.min(540,Number(cfg.posY)||0));cfg.sfxVolume=Math.max(0,Math.min(100,Number(cfg.sfxVolume)||0));if(dock){
  $('port').value=port;
- for(const tab of document.querySelectorAll('[data-tab]'))tab.onclick=()=>{for(const b of document.querySelectorAll('[data-tab]')){const selected=b===tab;b.setAttribute('aria-selected',String(selected));document.getElementById('panel-'+b.dataset.tab).hidden=!selected;}};
- document.addEventListener('keydown',e=>{if(/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)||e.ctrlKey||e.altKey||e.metaKey)return;const names={'1':'scratch','2':'smoke','3':'fart','4':'blink','5':'smile','0':'normal'};if(names[e.key]){e.preventDefault();triggerGesture(names[e.key]);sendEvent({kind:'gesture',gesture:names[e.key]}).catch(()=>{});}});
  for(const key of ['scale','posX','posY','sfxVolume']){$(key).value=cfg[key];$(key+'Value').textContent=cfg[key]+(key==='scale'||key==='sfxVolume'?'%':' px');}
  $('threshold').value=cfg.threshold;$('thresholdValue').textContent=cfg.threshold+' dB';
  $('auto').checked=cfg.auto;$('smoking').checked=cfg.smoking;$('kotatsu').checked=cfg.kotatsu;$('background').checked=cfg.background;
  if(inputList.some(i=>i.inputName===cfg.mic))$('mic').value=cfg.mic;
  $('gate').style.left=((cfg.threshold+70)/70*100)+'%';
-}checkMute();}
+}if(previousMic!==cfg.mic)checkMute();}
 async function checkMute(){if(!ready||!cfg.mic)return;try{muted=(await request('GetInputMute',{inputName:cfg.mic})).inputMuted;}catch{muted=false;}}
 async function refreshInputs(){
  const [list,special]=await Promise.all([request('GetInputList'),request('GetSpecialInputs')]);
@@ -82,9 +81,18 @@ async function initialize(){
  if(dock){setNotice(cfg.mic?'準備完了。話すと口が動きます。':'「OBSマイクを追加」から入力を設定してください。');await sendEvent({kind:'hello'});}
 }
 function sendEvent(data){return request('BroadcastCustomEvent',{eventData:{system,...data}});}
+function publishSettings(){
+ if(liveSettingsFrame!==null){cancelAnimationFrame(liveSettingsFrame);liveSettingsFrame=null;}
+ return sendEvent({kind:'settings',sender:clientId,sequence:++settingsSequence,settings:{...cfg}});
+}
+function queueLiveSettings(){
+ if(liveSettingsFrame!==null)return;
+ liveSettingsFrame=requestAnimationFrame(()=>{liveSettingsFrame=null;publishSettings().catch(e=>setNotice(e.message));});
+}
+function persistSettings(){return request('SetPersistentData',{realm:'OBS_WEBSOCKET_DATA_REALM_PROFILE',slotName:slot,slotValue:{...cfg}});}
 async function save(){
- applySettings(cfg);await request('SetPersistentData',{realm:'OBS_WEBSOCKET_DATA_REALM_PROFILE',slotName:slot,slotValue:cfg});
- await sendEvent({kind:'settings',settings:cfg});
+ clearTimeout(persistTimer);applySettings(cfg);
+ const live=publishSettings();await Promise.all([live,persistSettings()]);
 }
 function handleEvent(e){
  if(e.eventType==='InputMuteStateChanged'&&e.eventData.inputName===cfg.mic)muted=e.eventData.inputMuted;
@@ -97,14 +105,17 @@ function handleEvent(e){
  if(e.eventType==='CustomEvent'){
  const d=e.eventData.eventData||e.eventData;if(!d||d.system!==system)return;
  if(d.kind==='sfx-error')setNotice('効果音の再生を確認できません。');
- if(d.kind==='settings')applySettings(d.settings||{});
+ if(d.kind==='settings'&&d.sender!==clientId){
+ const prior=receivedSettings.get(d.sender)||0;
+ if(!d.sender||!d.sequence||d.sequence>prior){if(d.sender)receivedSettings.set(d.sender,d.sequence);applySettings(d.settings||{});}
+ }
  if(d.kind==='gesture')triggerGesture(d.gesture);
  if(d.kind==='test')testUntil=performance.now()+4500;
- if(d.kind==='diagnostics')sendEvent({kind:'diagnostics-response',mode,ready,imagesReady,mic:cfg.mic,sfxVolume:cfg.sfxVolume,error:lastError,gesture,layout:{scale:cfg.scale,posX:cfg.posX,posY:cfg.posY}}).catch(()=>{});
+ if(d.kind==='diagnostics')sendEvent({kind:'diagnostics-response',mode,build:'live-palette-real-v1',palette:paletteReport,ready,imagesReady,mic:cfg.mic,sfxVolume:cfg.sfxVolume,error:lastError,gesture,layout:{scale:cfg.scale,posX:cfg.posX,posY:cfg.posY}}).catch(()=>{});
  if(d.kind==='hello'&&!dock)sendEvent({kind:'settings',settings:cfg}).catch(()=>{});
  }
 }
-function playFartSound(){if(dock||cfg.sfxVolume<=0)return;const audio=new Audio('assets/fart.wav?v=1');audio.volume=cfg.sfxVolume/100;audio.play().catch(error=>{lastError='効果音: '+error.name+' '+error.message;sendEvent({kind:'sfx-error',message:lastError}).catch(()=>{});});}
+function playFartSound(){if(dock||cfg.sfxVolume<=0)return;const audio=new Audio('assets/fart-real.mp3?v=1');audio.volume=cfg.sfxVolume/100;audio.play().catch(error=>{lastError='効果音: '+error.name+' '+error.message;sendEvent({kind:'sfx-error',message:lastError}).catch(()=>{});});}
 function triggerGesture(name){if(!['normal','wave','scratch','smoke','fart','blink','smile'].includes(name))return;if(name==='blink')manualBlinkUntil=performance.now()+170;if(name==='fart'){fartStart=performance.now();playFartSound();}gesture=name;gestureUntil=performance.now()+({normal:0,wave:4300,scratch:2900,smoke:6100,fart:1800,blink:420,smile:1600}[name]);nextGesture=performance.now()+45000+Math.random()*45000;}
 function clipEyePatches(image){
  ctx.save();ctx.beginPath();
@@ -145,14 +156,37 @@ function frame(now){
  $('mouth').textContent=gesture==='smile'?'にっこり':speaking?'話しています':'待機中';}
  requestAnimationFrame(frame);
 }
+
+function normalizeMotionPalette(){
+ // Match every expressive layer to the original body, without changing anatomy or alpha.
+ const W=1920,H=1080;
+ function raster(image,body=false){const c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d',{willReadFrequently:true});if(body)g.transform(2.31100039,0.06312966,-0.06312966,2.31100039,-1505.98365482,-628.16518387);g.drawImage(image,0,0,body?image.width:W,body?image.height:H);return {canvas:c,g,data:g.getImageData(0,0,W,H)};}
+ function median(a){a.sort((x,y)=>x-y);return a[Math.floor(a.length/2)]||0;}
+ function sample(data,u,v){const out=[[],[],[]],b=data.data;for(let dy=-3;dy<=3;dy++)for(let dx=-3;dx<=3;dx++){const k=((Math.round(v*H)+dy)*W+Math.round(u*W)+dx)*4;if(b[k+3]>240)for(let c=0;c<3;c++)out[c].push(b[k+c]);}return out.map(median);}
+ function family(r,g,b){if(r-g>25&&r-b>15)return b>g*.7?'pink':'gold';return 'neutral';}
+ function colors(data){const bins={pink:[[],[],[]],gold:[[],[],[]]};const b=data.data;for(let k=0;k<b.length;k+=16){if(b[k+3]<240)continue;const f=family(b[k],b[k+1],b[k+2]);if(bins[f])for(let c=0;c<3;c++)bins[f][c].push(b[k+c]);}return Object.fromEntries(Object.entries(bins).map(([f,v])=>[f,v.map(median)]));}
+ const reference=raster(images.body,true),target={head:sample(reference.data,.43,.30),suit:sample(reference.data,.59,.82),white:sample(reference.data,.39,.66),...colors(reference.data)};
+ function interpolate(value,knots,values){for(let i=1;i<knots.length;i++)if(value<=knots[i])return values[i-1]+(value-knots[i-1])*(values[i]-values[i-1])/Math.max(1,knots[i]-knots[i-1]);return values[values.length-1];}
+ paletteReport.reference=target;
+ for(const name of ['idle','talk','blink','scratch','smoke']){
+  const layer=raster(images[name]),src={head:sample(layer.data,.43,.30),suit:sample(layer.data,.59,.82),white:sample(layer.data,.39,.66),...colors(layer.data)},b=layer.data.data;
+  const neutral=[0,1,2].map(c=>Array.from({length:256},(_,v)=>interpolate(v,[0,src.head[c],src.suit[c],src.white[c],255],[0,target.head[c],target.suit[c],target.white[c],255])));
+  for(let k=0;k<b.length;k+=4){if(!b[k+3])continue;const f=family(b[k],b[k+1],b[k+2]);for(let c=0;c<3;c++)b[k+c]=f==='neutral'?neutral[c][b[k+c]]:Math.max(0,Math.min(255,b[k+c]+target[f][c]-src[f][c]));}
+  layer.g.putImageData(layer.data,0,0);images[name]=layer.canvas;
+  paletteReport[name]={head:sample(layer.data,.43,.30),suit:sample(layer.data,.59,.82),white:sample(layer.data,.39,.66),...colors(layer.data)};
+ }
+}
+
 async function loadImages(){
  const names=['idle','talk','blink','scratch','smoke','body'];
  await Promise.all(names.map(name=>new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>{images[name]=image;resolve();};image.onerror=()=>reject(Error('キャラ画像を読み込めません: '+name));image.src='assets/'+name+'.png?v=4';})));
- imagesReady=true;
+ normalizeMotionPalette();imagesReady=true;
 }
 function guard(fn){return (...args)=>Promise.resolve().then(()=>fn(...args)).catch(e=>setNotice(e.message));}
 if(dock){
- for(const key of ['scale','posX','posY','sfxVolume']){$(key).oninput=()=>{cfg[key]=Number($(key).value);applySettings(cfg);clearTimeout(liveSettingsTimer);liveSettingsTimer=setTimeout(()=>sendEvent({kind:'settings',settings:cfg}).catch(()=>{}),30);clearTimeout(persistTimer);persistTimer=setTimeout(()=>save().catch(e=>setNotice(e.message)),400);};$(key).onchange=guard(save);}
+ for(const tab of document.querySelectorAll('[data-tab]'))tab.onclick=()=>{for(const b of document.querySelectorAll('[data-tab]')){const selected=b===tab;b.setAttribute('aria-selected',String(selected));document.getElementById('panel-'+b.dataset.tab).hidden=!selected;}};
+ document.addEventListener('keydown',e=>{if(/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)||e.ctrlKey||e.altKey||e.metaKey)return;const names={'1':'scratch','2':'smoke','3':'fart','4':'blink','5':'smile','0':'normal'};if(names[e.key]){e.preventDefault();triggerGesture(names[e.key]);sendEvent({kind:'gesture',gesture:names[e.key]}).catch(()=>{});}});
+ for(const key of ['scale','posX','posY','sfxVolume']){$(key).oninput=()=>{cfg[key]=Number($(key).value);applySettings(cfg);queueLiveSettings();clearTimeout(persistTimer);persistTimer=setTimeout(()=>persistSettings().catch(e=>setNotice(e.message)),400);};$(key).onchange=guard(save);}
  $('resetLayout').onclick=guard(async()=>{cfg.scale=100;cfg.posX=0;cfg.posY=0;await save();});
  $('mic').onchange=guard(async()=>{cfg.mic=$('mic').value;await save();});
  $('refresh').onclick=guard(refreshInputs);
