@@ -3,10 +3,11 @@
 const mode=document.body.dataset.mode, dock=mode==='dock', $=id=>document.getElementById(id);
 const canvas=$('stage'), ctx=canvas.getContext('2d',{alpha:true});
 const hash=new URLSearchParams(location.hash.slice(1));
-const defaults={mic:'',threshold:-42,auto:true,smoking:true,kotatsu:false};
+const defaults={mic:'',threshold:-42,auto:true,smoking:true,kotatsu:false,scale:100,posX:0,posY:0,sfxVolume:35};
 let cfg={...defaults}, socket, ready=false, retry, intentional=false, seq=0, waiting=new Map(), inputList=[], muted=false;
 let db=-100, lastMeter=0, speaking=false, holdUntil=0, testUntil=0, gesture='normal', gestureUntil=0;
 let nextGesture=performance.now()+50000, blinkUntil=0, nextBlink=performance.now()+2500, lastFrame=0, bounce=0;
+let fartStart=-10000;let persistTimer=null,liveSettingsTimer=null;
 let calibration=null, images={}, imagesReady=false, lastError='';
 const system='bat-pngtuber-v3', slot='bat-pngtuber-v3';
 const port=Number(hash.get('port'))||4455;
@@ -38,7 +39,8 @@ async function connect(){
  if(e.code===4009){if(dock)$('connectPanel').open=true;setNotice('OBSのWebSocketパスワードを入力してください。');}
  if(!intentional)retry=setTimeout(connect,e.code===4009?10000:2500);};
 }
-function applySettings(next){cfg={...cfg,...next};cfg.threshold=Math.max(-60,Math.min(-15,Number(cfg.threshold)||-42));if(dock){
+function applySettings(next){cfg={...cfg,...next};cfg.threshold=Math.max(-60,Math.min(-15,Number(cfg.threshold)||-42));cfg.scale=Math.max(30,Math.min(200,Number(cfg.scale)||100));cfg.posX=Math.max(-960,Math.min(960,Number(cfg.posX)||0));cfg.posY=Math.max(-540,Math.min(540,Number(cfg.posY)||0));cfg.sfxVolume=Math.max(0,Math.min(100,Number(cfg.sfxVolume)||0));if(dock){
+ for(const key of ['scale','posX','posY','sfxVolume']){$(key).value=cfg[key];$(key+'Value').textContent=cfg[key]+(key==='scale'||key==='sfxVolume'?'%':' px');}
  $('threshold').value=cfg.threshold;$('thresholdValue').textContent=cfg.threshold+' dB';
  $('auto').checked=cfg.auto;$('smoking').checked=cfg.smoking;$('kotatsu').checked=cfg.kotatsu;
  if(inputList.some(i=>i.inputName===cfg.mic))$('mic').value=cfg.mic;
@@ -96,7 +98,8 @@ function handleEvent(e){
  if(d.kind==='hello'&&!dock)sendEvent({kind:'settings',settings:cfg}).catch(()=>{});
  }
 }
-function triggerGesture(name){if(!['normal','wave','scratch','smoke'].includes(name))return;gesture=name;gestureUntil=performance.now()+({normal:0,wave:4300,scratch:2900,smoke:6100}[name]);nextGesture=performance.now()+45000+Math.random()*45000;}
+function playFartSound(){if(dock||cfg.sfxVolume<=0)return;const audio=new Audio('assets/fart.wav?v=1');audio.volume=cfg.sfxVolume/100;audio.play().catch(()=>{lastError='効果音を再生できません。OBSブラウザの音声設定を確認してください。';});}
+function triggerGesture(name){if(!['normal','wave','scratch','smoke','fart'].includes(name))return;if(name==='fart'){fartStart=performance.now();playFartSound();}gesture=name;gestureUntil=performance.now()+({normal:0,wave:4300,scratch:2900,smoke:6100,fart:1800}[name]);nextGesture=performance.now()+45000+Math.random()*45000;}
 function clipEyePatches(image){
  ctx.save();ctx.beginPath();
  ctx.ellipse(1920*.367,1080*.504,1920*.047,1080*.079,-.35,0,Math.PI*2);
@@ -104,6 +107,8 @@ function clipEyePatches(image){
  ctx.clip();ctx.drawImage(image,0,0,1920,1080);ctx.restore();
 }
 function clipMouth(image){ctx.save();ctx.beginPath();ctx.ellipse(1920*.451,1080*.577,1920*.041,1080*.073,-.35,0,Math.PI*2);ctx.clip();ctx.drawImage(image,0,0,1920,1080);ctx.restore();}
+function drawCigaretteSmoke(now){const time=now/1000;ctx.save();for(let i=0;i<4;i++){const t=(time+i*.85)%3.4/3.4;const x=1040+Math.sin(time*.9+i)*t*30,y=615-t*245;ctx.globalAlpha=Math.sin(Math.PI*t)*.44;ctx.strokeStyle='#dce3ec';ctx.lineWidth=5+6*t;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(x,y);ctx.bezierCurveTo(x-22,y-25,x+29,y-48,x+5,y-80);ctx.stroke();}ctx.restore();}
+function drawFart(now){const age=(now-fartStart)/1000;if(age<0||age>1.8)return;const t=age/1.8;ctx.save();ctx.globalAlpha=Math.min(1,t*10)*Math.pow(1-t,1.4);for(let i=0;i<7;i++){const k=i/6;const x=1470+t*(165+k*110)+Math.sin(i*2.1)*25;const y=918-t*(35+k*70)+Math.cos(i*1.7)*30;const radius=(24+18*Math.sin(i*1.3)**2)*(0.6+t*1.7);ctx.beginPath();ctx.arc(x,y,radius,0,Math.PI*2);ctx.fillStyle=i%2?'#dce9b7':'#e9efce';ctx.fill();ctx.lineWidth=3;ctx.strokeStyle='#a7bb83';ctx.stroke();}ctx.restore();}
 function frame(now){
  const dt=Math.min(.08,(now-lastFrame)/1000||.016);lastFrame=now;
  if(now-lastMeter>350)db=-100;
@@ -123,12 +128,13 @@ function frame(now){
  let angle=Math.sin(now/1700)*.0023;
  if(gesture==='wave')angle+=Math.sin(now/210)*.023;
  if(gesture==='scratch')angle+=Math.sin(now/60)*.007;
- ctx.save();ctx.translate(960,720-bounce);ctx.rotate(angle);ctx.scale(1+breath,1+breath);ctx.translate(-960,-720);
+ ctx.save();ctx.translate(cfg.posX,cfg.posY);ctx.translate(960,540);ctx.scale(cfg.scale/100,cfg.scale/100);ctx.translate(-960,-540);ctx.translate(960,720-bounce);ctx.rotate(angle);ctx.scale(1+breath,1+breath);ctx.translate(-960,-720);
  const key=blink?'blink':(speaking?'talk':'idle');
- const base=gesture==='scratch'?images.scratch:gesture==='smoke'?images.smoke:images.idle;
- ctx.drawImage(base,0,0,1920,1080);
+ const base=gesture==='scratch'?images.scratch:gesture==='smoke'?images.smoke:images.body;
+ drawFart(now);if(base===images.body){ctx.save();ctx.transform(2.31100039,0.06312966,-0.06312966,2.31100039,-1505.98365482,-628.16518387);ctx.drawImage(images.body,0,0);ctx.restore();}else ctx.drawImage(base,0,0,1920,1080);
+ if(gesture==='smoke')drawCigaretteSmoke(now);
  if(gesture!=='smoke')clipMouth(speaking?images.talk:images.idle);
- if(blink)clipEyePatches(images[key]);
+ clipEyePatches(blink?images.blink:images.idle);
  ctx.restore();
  }
  if(dock){$('meter').style.width=Math.max(0,Math.min(100,(db+70)/70*100))+'%';$('volume').textContent=muted?'マイク消音':db>-90?Math.round(db)+' dB':'無音';
@@ -136,12 +142,14 @@ function frame(now){
  requestAnimationFrame(frame);
 }
 async function loadImages(){
- const names=['idle','talk','blink','scratch','smoke'];
- await Promise.all(names.map(name=>new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>{images[name]=image;resolve();};image.onerror=()=>reject(Error('キャラ画像を読み込めません: '+name));image.src='assets/'+name+'.png?v=3';})));
+ const names=['idle','talk','blink','scratch','smoke','body'];
+ await Promise.all(names.map(name=>new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>{images[name]=image;resolve();};image.onerror=()=>reject(Error('キャラ画像を読み込めません: '+name));image.src='assets/'+name+'.png?v=4';})));
  imagesReady=true;
 }
 function guard(fn){return (...args)=>Promise.resolve().then(()=>fn(...args)).catch(e=>setNotice(e.message));}
 if(dock){
+ for(const key of ['scale','posX','posY','sfxVolume']){$(key).oninput=()=>{cfg[key]=Number($(key).value);applySettings(cfg);clearTimeout(liveSettingsTimer);liveSettingsTimer=setTimeout(()=>sendEvent({kind:'settings',settings:cfg}).catch(()=>{}),30);clearTimeout(persistTimer);persistTimer=setTimeout(()=>save().catch(e=>setNotice(e.message)),400);};$(key).onchange=guard(save);}
+ $('resetLayout').onclick=guard(async()=>{cfg.scale=100;cfg.posX=0;cfg.posY=0;await save();});
  $('mic').onchange=guard(async()=>{cfg.mic=$('mic').value;await save();});
  $('refresh').onclick=guard(refreshInputs);
  $('device').onchange=guard(async()=>{await request('SetInputSettings',{inputName:cfg.mic,inputSettings:{device_id:$('device').value},overlay:true});setNotice('マイク機器を切り替えました。');});
