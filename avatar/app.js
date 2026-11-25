@@ -3,11 +3,14 @@
 const mode=document.body.dataset.mode, dock=mode==='dock', $=id=>document.getElementById(id);
 const canvas=$('stage'), ctx=canvas.getContext('2d',{alpha:true});
 const hash=new URLSearchParams(location.hash.slice(1));
-const defaults={mic:'',threshold:-42,auto:true,smoking:true,kotatsu:false,scale:100,posX:0,posY:0,sfxVolume:35,background:true};
+const motionNames={scratch:'ぽりぽり',smoke:'一服',fart:'おなら',blink:'瞬き',smile:'にっこり'};
+const expressionNames={normal:'通常',joy:'喜',anger:'怒',sadness:'哀',delight:'楽'};
+const defaults={expression:'normal',autoMotions:['scratch','smoke','blink','smile'],autoInterval:60,mic:'',threshold:-42,auto:true,smoking:true,kotatsu:false,scale:100,posX:0,posY:0,sfxVolume:35,background:true};
 let cfg={...defaults}, socket, ready=false, retry, intentional=false, seq=0, waiting=new Map(), inputList=[], muted=false;
+let lastMouthOpen=false;
 let rmsDb=-100,mouthPhase=0,manualBlinkUntil=0,lastShownGesture='';
 let db=-100, lastMeter=0, speaking=false, holdUntil=0, testUntil=0, gesture='normal', gestureUntil=0;
-let nextGesture=performance.now()+50000, blinkUntil=0, nextBlink=performance.now()+2500, lastFrame=0, bounce=0;
+let autoScheduleSignature='';let nextGesture=performance.now()+60000,autoCursor=0, blinkUntil=0, nextBlink=performance.now()+2500, lastFrame=0, bounce=0;
 let fartStart=-10000;let persistTimer=null,liveSettingsFrame=null;
 const clientId=crypto.randomUUID();let settingsSequence=0;const receivedSettings=new Map();let paletteReport={};
 let calibration=null, images={}, imagesReady=false, lastError='';
@@ -41,11 +44,18 @@ async function connect(){
  if(e.code===4009){if(dock)$('connectPanel').open=true;setNotice('OBSのWebSocketパスワードを入力してください。');}
  if(!intentional)retry=setTimeout(connect,e.code===4009?10000:2500);};
 }
-function applySettings(next){const previousMic=cfg.mic;cfg={...cfg,...next};cfg.threshold=Math.max(-60,Math.min(-15,Number(cfg.threshold)||-42));cfg.scale=Math.max(30,Math.min(200,Number(cfg.scale)||100));cfg.posX=Math.max(-960,Math.min(960,Number(cfg.posX)||0));cfg.posY=Math.max(-540,Math.min(540,Number(cfg.posY)||0));cfg.sfxVolume=Math.max(0,Math.min(100,Number(cfg.sfxVolume)||0));if(dock){
+function applySettings(next){const previousMic=cfg.mic;
+ if(!Object.prototype.hasOwnProperty.call(next,'autoMotions')&&Object.prototype.hasOwnProperty.call(next,'smoking'))next={...next,autoMotions:['scratch',...(next.smoking?['smoke']:[]),'blink','smile']};
+ cfg={...cfg,...next};cfg.expression=Object.prototype.hasOwnProperty.call(expressionNames,cfg.expression)?cfg.expression:'normal';cfg.autoMotions=Array.isArray(cfg.autoMotions)?[...new Set(cfg.autoMotions.filter(k=>Object.prototype.hasOwnProperty.call(motionNames,k)))]:[...defaults.autoMotions];cfg.autoInterval=Math.max(10,Math.min(600,Math.round(Number(cfg.autoInterval)||60)));
+ const nextAutoSignature=JSON.stringify([cfg.auto,cfg.autoMotions,cfg.autoInterval,cfg.kotatsu]);if(autoScheduleSignature!==nextAutoSignature){autoScheduleSignature=nextAutoSignature;nextGesture=performance.now()+cfg.autoInterval*1000;autoCursor=0;}cfg.threshold=Math.max(-60,Math.min(-15,Number(cfg.threshold)||-42));cfg.scale=Math.max(30,Math.min(200,Number(cfg.scale)||100));cfg.posX=Math.max(-960,Math.min(960,Number(cfg.posX)||0));cfg.posY=Math.max(-540,Math.min(540,Number(cfg.posY)||0));cfg.sfxVolume=Math.max(0,Math.min(100,Number(cfg.sfxVolume)||0));if(dock){
  $('port').value=port;
  for(const key of ['scale','posX','posY','sfxVolume']){$(key).value=cfg[key];$(key+'Value').textContent=cfg[key]+(key==='scale'||key==='sfxVolume'?'%':' px');}
  $('threshold').value=cfg.threshold;$('thresholdValue').textContent=cfg.threshold+' dB';
- $('auto').checked=cfg.auto;$('smoking').checked=cfg.smoking;$('kotatsu').checked=cfg.kotatsu;$('background').checked=cfg.background;
+ $('auto').checked=cfg.auto;
+ for(const b of document.querySelectorAll('[data-expression]')){const selected=b.dataset.expression===cfg.expression;b.setAttribute('aria-pressed',String(selected));b.classList.toggle('active',selected);}
+ for(const input of document.querySelectorAll('[data-auto-motion]'))input.checked=cfg.autoMotions.includes(input.dataset.autoMotion);
+ $('autoInterval').value=cfg.autoInterval;$('autoIntervalValue').textContent=cfg.autoInterval+' 秒';
+ const pool=eligibleAutoMotions();$('autoSummary').textContent=!cfg.auto?'自動モーションは停止中':pool.length?pool.map(k=>motionNames[k]).join(' → ')+' ／ '+cfg.autoInterval+'秒ごと':'モーション未選択。自動再生は待機中';$('kotatsu').checked=cfg.kotatsu;$('background').checked=cfg.background;
  if(inputList.some(i=>i.inputName===cfg.mic))$('mic').value=cfg.mic;
  $('gate').style.left=((cfg.threshold+70)/70*100)+'%';
 }if(previousMic!==cfg.mic)checkMute();}
@@ -80,7 +90,7 @@ async function initialize(){
  await refreshInputs();applySettings(cfg);
  if(dock){setNotice(cfg.mic?'準備完了。話すと口が動きます。':'「OBSマイクを追加」から入力を設定してください。');await sendEvent({kind:'hello'});}
 }
-function sendEvent(data){return request('BroadcastCustomEvent',{eventData:{system,...data}});}
+function sendEvent(data){return request('BroadcastCustomEvent',{eventData:{system,sender:clientId,...data}});}
 function publishSettings(){
  if(liveSettingsFrame!==null){cancelAnimationFrame(liveSettingsFrame);liveSettingsFrame=null;}
  return sendEvent({kind:'settings',sender:clientId,sequence:++settingsSequence,settings:{...cfg}});
@@ -109,14 +119,14 @@ function handleEvent(e){
  const prior=receivedSettings.get(d.sender)||0;
  if(!d.sender||!d.sequence||d.sequence>prior){if(d.sender)receivedSettings.set(d.sender,d.sequence);applySettings(d.settings||{});}
  }
- if(d.kind==='gesture')triggerGesture(d.gesture);
+ if(d.kind==='gesture'&&d.sender!==clientId)triggerGesture(d.gesture);
  if(d.kind==='test')testUntil=performance.now()+4500;
- if(d.kind==='diagnostics')sendEvent({kind:'diagnostics-response',mode,build:'live-palette-real-v1',palette:paletteReport,ready,imagesReady,mic:cfg.mic,sfxVolume:cfg.sfxVolume,error:lastError,gesture,layout:{scale:cfg.scale,posX:cfg.posX,posY:cfg.posY}}).catch(()=>{});
+ if(d.kind==='diagnostics')sendEvent({kind:'diagnostics-response',mode,build:'expressions-auto-v1',expression:cfg.expression,mouthOpen:lastMouthOpen,autoMotions:eligibleAutoMotions(),autoInterval:cfg.autoInterval,palette:paletteReport,ready,imagesReady,mic:cfg.mic,sfxVolume:cfg.sfxVolume,error:lastError,gesture,layout:{scale:cfg.scale,posX:cfg.posX,posY:cfg.posY}}).catch(()=>{});
  if(d.kind==='hello'&&!dock)sendEvent({kind:'settings',settings:cfg}).catch(()=>{});
  }
 }
 function playFartSound(){if(dock||cfg.sfxVolume<=0)return;const audio=new Audio('assets/fart-real.mp3?v=1');audio.volume=cfg.sfxVolume/100;audio.play().catch(error=>{lastError='効果音: '+error.name+' '+error.message;sendEvent({kind:'sfx-error',message:lastError}).catch(()=>{});});}
-function triggerGesture(name){if(!['normal','wave','scratch','smoke','fart','blink','smile'].includes(name))return;if(name==='blink')manualBlinkUntil=performance.now()+170;if(name==='fart'){fartStart=performance.now();playFartSound();}gesture=name;gestureUntil=performance.now()+({normal:0,wave:4300,scratch:2900,smoke:6100,fart:1800,blink:420,smile:1600}[name]);nextGesture=performance.now()+45000+Math.random()*45000;}
+function triggerGesture(name){if(!['normal','wave','scratch','smoke','fart','blink','smile'].includes(name))return;if(name==='blink')manualBlinkUntil=performance.now()+170;if(name==='fart'){fartStart=performance.now();playFartSound();}gesture=name;gestureUntil=performance.now()+({normal:0,wave:4300,scratch:2900,smoke:6100,fart:1800,blink:420,smile:1600}[name]);}
 function clipEyePatches(image){
  ctx.save();ctx.beginPath();
  ctx.ellipse(1920*.367,1080*.504,1920*.047,1080*.079,-.35,0,Math.PI*2);
@@ -126,6 +136,16 @@ function clipEyePatches(image){
 function clipMouth(image){ctx.save();ctx.beginPath();ctx.ellipse(1920*.451,1080*.577,1920*.041,1080*.073,-.35,0,Math.PI*2);ctx.clip();ctx.drawImage(image,0,0,1920,1080);ctx.restore();}
 function drawCigaretteSmoke(now){const time=now/1000;ctx.save();for(let i=0;i<4;i++){const t=(time+i*.85)%3.4/3.4;const x=1040+Math.sin(time*.9+i)*t*30,y=615-t*245;ctx.globalAlpha=Math.sin(Math.PI*t)*.44;ctx.strokeStyle='#dce3ec';ctx.lineWidth=5+6*t;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(x,y);ctx.bezierCurveTo(x-22,y-25,x+29,y-48,x+5,y-80);ctx.stroke();}ctx.restore();}
 function drawFart(now){const age=(now-fartStart)/1000;if(age<0||age>1.8)return;const t=age/1.8;ctx.save();ctx.globalAlpha=Math.min(1,t*10)*Math.pow(1-t,1.4);for(let i=0;i<7;i++){const k=i/6;const x=1470+t*(165+k*110)+Math.sin(i*2.1)*25;const y=918-t*(35+k*70)+Math.cos(i*1.7)*30;const radius=(24+18*Math.sin(i*1.3)**2)*(0.6+t*1.7);ctx.beginPath();ctx.arc(x,y,radius,0,Math.PI*2);ctx.fillStyle=i%2?'#dce9b7':'#e9efce';ctx.fill();ctx.lineWidth=3;ctx.strokeStyle='#a7bb83';ctx.stroke();}ctx.restore();}
+function eligibleAutoMotions(){return cfg.autoMotions.filter(k=>!(cfg.kotatsu&&k==='scratch'));}
+function runAutoMotion(now){
+ if(!cfg.auto||dock||gesture!=='normal'||now<nextGesture)return;
+ const pool=eligibleAutoMotions();nextGesture=now+cfg.autoInterval*1000;
+ if(!pool.length)return;
+ const pick=pool[autoCursor%pool.length];autoCursor=(autoCursor+1)%pool.length;
+ triggerGesture(pick);sendEvent({kind:'gesture',gesture:pick}).catch(()=>{});
+}
+async function chooseExpression(name){if(!Object.prototype.hasOwnProperty.call(expressionNames,name))return;cfg.expression=name;await save();setNotice(expressionNames[name]+'の表情に切替。話すと口パクします。');}
+
 function frame(now){
  const dt=Math.min(.08,(now-lastFrame)/1000||.016);lastFrame=now;
  if(now-lastMeter>350)db=-100;
@@ -135,11 +155,9 @@ function frame(now){
  if(now>=nextBlink){blinkUntil=now+115;nextBlink=now+2800+Math.random()*3600;}
  const blink=now<blinkUntil||now<manualBlinkUntil||gesture==='smile';
  if(gesture!=='normal'&&now>gestureUntil)gesture='normal';
- if(cfg.auto&&!dock&&gesture==='normal'&&now>nextGesture){
- const pool=['blink','smile'];if(!cfg.kotatsu)pool.push('scratch');if(cfg.smoking)pool.push('smoke');const pick=pool[Math.floor(Math.random()*pool.length)];triggerGesture(pick);sendEvent({kind:'gesture',gesture:pick}).catch(()=>{});
- }
+ runAutoMotion(now);
  const energy=Math.max(0,Math.min(1,(rmsDb-cfg.threshold+8)/25));mouthPhase+=dt*(3.4+energy*2.1+.35*Math.sin(now/580))*Math.PI*2;
- const mouthOpen=gesture==='smile'||(speaking&&Math.sin(mouthPhase)>-.1);
+ const mouthOpen=speaking&&Math.sin(mouthPhase)>-.1;lastMouthOpen=mouthOpen;
  ctx.clearRect(0,0,1920,1080);if(cfg.background&&typeof window.drawBatBackground==='function')window.drawBatBackground(ctx,now);
  if(imagesReady){
  
@@ -147,9 +165,16 @@ function frame(now){
  
  const base=gesture==='scratch'?images.scratch:gesture==='smoke'?images.smoke:images.body;
  drawFart(now);if(base===images.body){ctx.save();ctx.transform(2.31100039,0.06312966,-0.06312966,2.31100039,-1505.98365482,-628.16518387);ctx.drawImage(images.body,0,0);ctx.restore();}else ctx.drawImage(base,0,0,1920,1080);
+ const emotional=cfg.expression!=='normal'&&typeof window.drawBatExpression==='function';
+ if(emotional){
+  clipEyePatches(images.idle);clipMouth(images.idle);
+  window.drawBatExpression(ctx,cfg.expression,mouthOpen,now<blinkUntil||now<manualBlinkUntil);
+  if(gesture==='smoke')ctx.drawImage(images.smoke,912,594,144,57,912,594,144,57);
+ }else{
+  if(gesture!=='smoke')clipMouth(mouthOpen?images.talk:images.idle);
+  clipEyePatches(blink?images.blink:images.idle);
+ }
  if(gesture==='smoke')drawCigaretteSmoke(now);
- if(gesture!=='smoke')clipMouth(mouthOpen?images.talk:images.idle);
- clipEyePatches(blink?images.blink:images.idle);
  ctx.restore();
  }
  if(dock){if(gesture!==lastShownGesture){lastShownGesture=gesture;for(const b of document.querySelectorAll('[data-gesture]'))b.classList.toggle('active',b.dataset.gesture===gesture);}$('meter').style.width=Math.max(0,Math.min(100,(db+70)/70*100))+'%';$('volume').textContent=muted?'マイク消音':db>-90?Math.round(db)+' dB':'無音';
@@ -185,15 +210,18 @@ async function loadImages(){
 function guard(fn){return (...args)=>Promise.resolve().then(()=>fn(...args)).catch(e=>setNotice(e.message));}
 if(dock){
  for(const tab of document.querySelectorAll('[data-tab]'))tab.onclick=()=>{for(const b of document.querySelectorAll('[data-tab]')){const selected=b===tab;b.setAttribute('aria-selected',String(selected));document.getElementById('panel-'+b.dataset.tab).hidden=!selected;}};
- document.addEventListener('keydown',e=>{if(/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)||e.ctrlKey||e.altKey||e.metaKey)return;const names={'1':'scratch','2':'smoke','3':'fart','4':'blink','5':'smile','0':'normal'};if(names[e.key]){e.preventDefault();triggerGesture(names[e.key]);sendEvent({kind:'gesture',gesture:names[e.key]}).catch(()=>{});}});
+ document.addEventListener('keydown',e=>{if(/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)||e.ctrlKey||e.altKey||e.metaKey)return;if(e.repeat)return;const expressions={q:'joy',w:'anger',e:'sadness',r:'delight',n:'normal'};if(expressions[e.key.toLowerCase()]){e.preventDefault();chooseExpression(expressions[e.key.toLowerCase()]).catch(error=>setNotice(error.message));return;}const names={'1':'scratch','2':'smoke','3':'fart','4':'blink','5':'smile','0':'normal'};if(names[e.key]){e.preventDefault();triggerGesture(names[e.key]);sendEvent({kind:'gesture',gesture:names[e.key]}).catch(()=>{});}});
  for(const key of ['scale','posX','posY','sfxVolume']){$(key).oninput=()=>{cfg[key]=Number($(key).value);applySettings(cfg);queueLiveSettings();clearTimeout(persistTimer);persistTimer=setTimeout(()=>persistSettings().catch(e=>setNotice(e.message)),400);};$(key).onchange=guard(save);}
+ for(const button of document.querySelectorAll('[data-expression]'))button.onclick=guard(()=>chooseExpression(button.dataset.expression));
+ for(const input of document.querySelectorAll('[data-auto-motion]'))input.onchange=guard(async()=>{cfg.autoMotions=[...document.querySelectorAll('[data-auto-motion]')].filter(el=>el.checked).map(el=>el.dataset.autoMotion);await save();});
+ $('autoInterval').onchange=guard(async()=>{cfg.autoInterval=Number($('autoInterval').value);await save();});
  $('resetLayout').onclick=guard(async()=>{cfg.scale=100;cfg.posX=0;cfg.posY=0;await save();});
  $('mic').onchange=guard(async()=>{cfg.mic=$('mic').value;await save();});
  $('refresh').onclick=guard(refreshInputs);
  $('device').onchange=guard(async()=>{await request('SetInputSettings',{inputName:cfg.mic,inputSettings:{device_id:$('device').value},overlay:true});setNotice('マイク機器を切り替えました。');});
  $('threshold').oninput=()=>{cfg.threshold=Number($('threshold').value);applySettings(cfg);};
  $('threshold').onchange=guard(save);
- for(const key of ['auto','smoking','kotatsu','background'])$(key).onchange=guard(async()=>{cfg[key]=$(key).checked;await save();});
+ for(const key of ['auto','kotatsu','background'])$(key).onchange=guard(async()=>{cfg[key]=$(key).checked;await save();});
  for(const button of document.querySelectorAll('[data-gesture]'))button.onclick=guard(async()=>{triggerGesture(button.dataset.gesture);await sendEvent({kind:'gesture',gesture:button.dataset.gesture});});
  $('test').onclick=guard(async()=>{testUntil=performance.now()+4500;await sendEvent({kind:'test'});setNotice('4秒間の口パクテスト。実際のマイク入力とは別です。');});
  $('calibrate').onclick=guard(async()=>{if(!cfg.mic)throw Error('先にマイクを選んでください。');calibration=[];setNotice('1秒間、周りの音量を測っています。');await new Promise(r=>setTimeout(r,1100));const samples=calibration;calibration=null;if(!samples.length)throw Error('マイクの音量を受信できません。OBSのマイクを確認してください。');samples.sort((a,b)=>a-b);cfg.threshold=Math.max(-55,Math.min(-20,Math.round(samples[Math.floor(samples.length*.9)]+10)));await save();setNotice('調整しました。話し声で口が動くか確認してください。');});
