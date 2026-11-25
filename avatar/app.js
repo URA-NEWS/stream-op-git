@@ -55,7 +55,21 @@ async function refreshInputs(){
  $('mic').value=cfg.mic;}
  await checkMute();return list;
 }
+async function installOBS(){
+ const sceneName='BAT キャラ配信',inputName='BAT キャラ（ブラウザ）';
+ const scenes=await request('GetSceneList');if(!scenes.scenes.some(s=>s.sceneName===sceneName))await request('CreateScene',{sceneName});
+ const url=new URL('overlay.html',location.href);url.hash=new URLSearchParams({p:password,port:String(port)}).toString();
+ const inputSettings={url:url.href,width:1920,height:1080,fps:60,fps_custom:true,is_local_file:false,shutdown:false,restart_when_active:false,reroute_audio:true};
+ const inputs=await request('GetInputList');if(inputs.inputs.some(i=>i.inputName===inputName)){
+ await request('SetInputSettings',{inputName,inputSettings,overlay:true});const items=await request('GetSceneItemList',{sceneName});if(!items.sceneItems.some(i=>i.sourceName===inputName))await request('CreateSceneItem',{sceneName,sourceName:inputName,sceneItemEnabled:true});
+ }else await request('CreateInput',{sceneName,inputName,inputKind:'browser_source',inputSettings,sceneItemEnabled:true});
+ const special=await request('GetSpecialInputs');if(!special.mic1&&!inputs.inputs.some(i=>/wasapi_input_capture/.test(i.inputKind))){await request('CreateInput',{sceneName,inputName:'キャラ用マイク',inputKind:'wasapi_input_capture',inputSettings:{device_id:'default',use_device_timing:false},sceneItemEnabled:true});cfg.mic='キャラ用マイク';}
+ const stream=await request('GetStreamStatus');if(!stream.outputActive)await request('SetCurrentProgramScene',{sceneName});
+ setNotice('OBSにキャラを追加しました。話すと口が動きます。');
+}
 async function initialize(){
+ if(dock&&hash.get('setup')==='1'&&!window.batSetupDone){await installOBS();window.batSetupDone=true;}
+
  try{const saved=await request('GetPersistentData',{realm:'OBS_WEBSOCKET_REALM_PROFILE',slotName:slot});if(saved.slotValue&&typeof saved.slotValue==='object')applySettings(saved.slotValue);}catch{}
  await refreshInputs();applySettings(cfg);
  if(dock){setNotice(cfg.mic?'準備完了。話すと口が動きます。':'「OBSマイクを追加」から入力を設定してください。');await sendEvent({kind:'hello'});}
