@@ -3,14 +3,15 @@
 const mode=document.body.dataset.mode, dock=mode==='dock', $=id=>document.getElementById(id);
 const canvas=$('stage'), ctx=canvas.getContext('2d',{alpha:true});
 const hash=new URLSearchParams(location.hash.slice(1));
-const defaults={mic:'',threshold:-42,auto:true,smoking:true,kotatsu:false,scale:100,posX:0,posY:0,sfxVolume:35};
+const defaults={mic:'',threshold:-42,auto:true,smoking:true,kotatsu:false,scale:100,posX:0,posY:0,sfxVolume:35,background:true};
 let cfg={...defaults}, socket, ready=false, retry, intentional=false, seq=0, waiting=new Map(), inputList=[], muted=false;
+let rmsDb=-100,mouthPhase=0,manualBlinkUntil=0,lastShownGesture='';
 let db=-100, lastMeter=0, speaking=false, holdUntil=0, testUntil=0, gesture='normal', gestureUntil=0;
 let nextGesture=performance.now()+50000, blinkUntil=0, nextBlink=performance.now()+2500, lastFrame=0, bounce=0;
 let fartStart=-10000;let persistTimer=null,liveSettingsTimer=null;
 let calibration=null, images={}, imagesReady=false, lastError='';
 const system='bat-pngtuber-v3', slot='bat-pngtuber-v3';
-const port=Number(hash.get('port'))||4455;
+let port=Number(hash.get('port'))||4455;
 let password=hash.get('p')||sessionStorage.getItem(system+'-password')||'';
 const setNotice=t=>{if(dock)$('notice').textContent=t;};
 function connection(text,status){if(dock){$('connection').textContent=text;$('connection').className='badge '+(status||'');}}
@@ -40,9 +41,12 @@ async function connect(){
  if(!intentional)retry=setTimeout(connect,e.code===4009?10000:2500);};
 }
 function applySettings(next){cfg={...cfg,...next};cfg.threshold=Math.max(-60,Math.min(-15,Number(cfg.threshold)||-42));cfg.scale=Math.max(30,Math.min(200,Number(cfg.scale)||100));cfg.posX=Math.max(-960,Math.min(960,Number(cfg.posX)||0));cfg.posY=Math.max(-540,Math.min(540,Number(cfg.posY)||0));cfg.sfxVolume=Math.max(0,Math.min(100,Number(cfg.sfxVolume)||0));if(dock){
+ $('port').value=port;
+ for(const tab of document.querySelectorAll('[data-tab]'))tab.onclick=()=>{for(const b of document.querySelectorAll('[data-tab]')){const selected=b===tab;b.setAttribute('aria-selected',String(selected));document.getElementById('panel-'+b.dataset.tab).hidden=!selected;}};
+ document.addEventListener('keydown',e=>{if(/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)||e.ctrlKey||e.altKey||e.metaKey)return;const names={'1':'scratch','2':'smoke','3':'fart','4':'blink','5':'smile','0':'normal'};if(names[e.key]){e.preventDefault();triggerGesture(names[e.key]);sendEvent({kind:'gesture',gesture:names[e.key]}).catch(()=>{});}});
  for(const key of ['scale','posX','posY','sfxVolume']){$(key).value=cfg[key];$(key+'Value').textContent=cfg[key]+(key==='scale'||key==='sfxVolume'?'%':' px');}
  $('threshold').value=cfg.threshold;$('thresholdValue').textContent=cfg.threshold+' dB';
- $('auto').checked=cfg.auto;$('smoking').checked=cfg.smoking;$('kotatsu').checked=cfg.kotatsu;
+ $('auto').checked=cfg.auto;$('smoking').checked=cfg.smoking;$('kotatsu').checked=cfg.kotatsu;$('background').checked=cfg.background;
  if(inputList.some(i=>i.inputName===cfg.mic))$('mic').value=cfg.mic;
  $('gate').style.left=((cfg.threshold+70)/70*100)+'%';
 }checkMute();}
@@ -65,7 +69,7 @@ async function installOBS(){
  const inputs=await request('GetInputList');if(inputs.inputs.some(i=>i.inputName===inputName)){
  await request('SetInputSettings',{inputName,inputSettings,overlay:true});const items=await request('GetSceneItemList',{sceneName});if(!items.sceneItems.some(i=>i.sourceName===inputName))await request('CreateSceneItem',{sceneName,sourceName:inputName,sceneItemEnabled:true});
  }else await request('CreateInput',{sceneName,inputName,inputKind:'browser_source',inputSettings,sceneItemEnabled:true});
- const special=await request('GetSpecialInputs');if(!special.mic1&&!inputs.inputs.some(i=>/wasapi_input_capture/.test(i.inputKind))){await request('CreateInput',{sceneName,inputName:'キャラ用マイク',inputKind:'wasapi_input_capture',inputSettings:{device_id:'default',use_device_timing:false},sceneItemEnabled:true});cfg.mic='キャラ用マイク';}
+ const special=await request('GetSpecialInputs');if(!special.mic1){const available=inputs.inputs.find(i=>/wasapi_input_capture|coreaudio_input_capture|pulse_input_capture/.test(i.inputKind));if(available){const items=await request('GetSceneItemList',{sceneName});if(!items.sceneItems.some(i=>i.sourceName===available.inputName))await request('CreateSceneItem',{sceneName,sourceName:available.inputName,sceneItemEnabled:true});cfg.mic=available.inputName;}else{await request('CreateInput',{sceneName,inputName:'キャラ用マイク',inputKind:'wasapi_input_capture',inputSettings:{device_id:'default',use_device_timing:false},sceneItemEnabled:true});cfg.mic='キャラ用マイク';}}
  const stream=await request('GetStreamStatus');if(!stream.outputActive)await request('SetCurrentProgramScene',{sceneName});
  setNotice('OBSにキャラを追加しました。話すと口が動きます。');
 }
@@ -87,19 +91,21 @@ function handleEvent(e){
  if(e.eventType==='InputCreated'||e.eventType==='InputRemoved')refreshInputs().catch(()=>{});
  if(e.eventType==='InputVolumeMeters'){
  const input=e.eventData.inputs.find(i=>i.inputName===cfg.mic);
- if(input){const peaks=input.inputLevelsMul.map(c=>c[1]||0);const level=Math.max(0,...peaks);db=muted?-100:20*Math.log10(Math.max(1e-6,level));lastMeter=performance.now();
+ if(input){const peaks=input.inputLevelsMul.map(c=>c[1]||0);const level=Math.max(0,...peaks);rmsDb=20*Math.log10(Math.max(1e-6,...input.inputLevelsMul.map(c=>c[0]||0)));db=muted?-100:20*Math.log10(Math.max(1e-6,level));lastMeter=performance.now();
  if(calibration)calibration.push(db);}
  }
  if(e.eventType==='CustomEvent'){
- const d=e.eventData.eventData;if(!d||d.system!==system)return;
+ const d=e.eventData.eventData||e.eventData;if(!d||d.system!==system)return;
+ if(d.kind==='sfx-error')setNotice('効果音の再生を確認できません。');
  if(d.kind==='settings')applySettings(d.settings||{});
  if(d.kind==='gesture')triggerGesture(d.gesture);
  if(d.kind==='test')testUntil=performance.now()+4500;
+ if(d.kind==='diagnostics')sendEvent({kind:'diagnostics-response',mode,ready,imagesReady,mic:cfg.mic,sfxVolume:cfg.sfxVolume,error:lastError,gesture,layout:{scale:cfg.scale,posX:cfg.posX,posY:cfg.posY}}).catch(()=>{});
  if(d.kind==='hello'&&!dock)sendEvent({kind:'settings',settings:cfg}).catch(()=>{});
  }
 }
-function playFartSound(){if(dock||cfg.sfxVolume<=0)return;const audio=new Audio('assets/fart.wav?v=1');audio.volume=cfg.sfxVolume/100;audio.play().catch(()=>{lastError='効果音を再生できません。OBSブラウザの音声設定を確認してください。';});}
-function triggerGesture(name){if(!['normal','wave','scratch','smoke','fart'].includes(name))return;if(name==='fart'){fartStart=performance.now();playFartSound();}gesture=name;gestureUntil=performance.now()+({normal:0,wave:4300,scratch:2900,smoke:6100,fart:1800}[name]);nextGesture=performance.now()+45000+Math.random()*45000;}
+function playFartSound(){if(dock||cfg.sfxVolume<=0)return;const audio=new Audio('assets/fart.wav?v=1');audio.volume=cfg.sfxVolume/100;audio.play().catch(error=>{lastError='効果音: '+error.name+' '+error.message;sendEvent({kind:'sfx-error',message:lastError}).catch(()=>{});});}
+function triggerGesture(name){if(!['normal','wave','scratch','smoke','fart','blink','smile'].includes(name))return;if(name==='blink')manualBlinkUntil=performance.now()+170;if(name==='fart'){fartStart=performance.now();playFartSound();}gesture=name;gestureUntil=performance.now()+({normal:0,wave:4300,scratch:2900,smoke:6100,fart:1800,blink:420,smile:1600}[name]);nextGesture=performance.now()+45000+Math.random()*45000;}
 function clipEyePatches(image){
  ctx.save();ctx.beginPath();
  ctx.ellipse(1920*.367,1080*.504,1920*.047,1080*.079,-.35,0,Math.PI*2);
@@ -116,29 +122,27 @@ function frame(now){
  if(fake||(ready&&!muted&&db>=cfg.threshold)){speaking=true;holdUntil=now+125;}
  else if(now>holdUntil&&db<cfg.threshold-4)speaking=false;
  if(now>=nextBlink){blinkUntil=now+115;nextBlink=now+2800+Math.random()*3600;}
- const blink=now<blinkUntil;
+ const blink=now<blinkUntil||now<manualBlinkUntil||gesture==='smile';
  if(gesture!=='normal'&&now>gestureUntil)gesture='normal';
  if(cfg.auto&&!dock&&gesture==='normal'&&now>nextGesture){
- const pool=['wave','wave'];if(!cfg.kotatsu)pool.push('scratch');if(cfg.smoking)pool.push('smoke');const pick=pool[Math.floor(Math.random()*pool.length)];triggerGesture(pick);sendEvent({kind:'gesture',gesture:pick}).catch(()=>{});
+ const pool=['blink','smile'];if(!cfg.kotatsu)pool.push('scratch');if(cfg.smoking)pool.push('smoke');const pick=pool[Math.floor(Math.random()*pool.length)];triggerGesture(pick);sendEvent({kind:'gesture',gesture:pick}).catch(()=>{});
  }
- bounce+=(Number(speaking)*4-bounce)*Math.min(1,dt*11);
- ctx.clearRect(0,0,1920,1080);
+ const energy=Math.max(0,Math.min(1,(rmsDb-cfg.threshold+8)/25));mouthPhase+=dt*(3.4+energy*2.1+.35*Math.sin(now/580))*Math.PI*2;
+ const mouthOpen=gesture==='smile'||(speaking&&Math.sin(mouthPhase)>-.1);
+ ctx.clearRect(0,0,1920,1080);if(cfg.background&&typeof window.drawBatBackground==='function')window.drawBatBackground(ctx,now);
  if(imagesReady){
- const breath=Math.sin(now/680)*.0026;
- let angle=Math.sin(now/1700)*.0023;
- if(gesture==='wave')angle+=Math.sin(now/210)*.023;
- if(gesture==='scratch')angle+=Math.sin(now/60)*.007;
- ctx.save();ctx.translate(cfg.posX,cfg.posY);ctx.translate(960,540);ctx.scale(cfg.scale/100,cfg.scale/100);ctx.translate(-960,-540);ctx.translate(960,720-bounce);ctx.rotate(angle);ctx.scale(1+breath,1+breath);ctx.translate(-960,-720);
- const key=blink?'blink':(speaking?'talk':'idle');
+ 
+ ctx.save();ctx.translate(cfg.posX,cfg.posY);ctx.translate(960,540);ctx.scale(cfg.scale/100,cfg.scale/100);ctx.translate(-960,-540);
+ 
  const base=gesture==='scratch'?images.scratch:gesture==='smoke'?images.smoke:images.body;
  drawFart(now);if(base===images.body){ctx.save();ctx.transform(2.31100039,0.06312966,-0.06312966,2.31100039,-1505.98365482,-628.16518387);ctx.drawImage(images.body,0,0);ctx.restore();}else ctx.drawImage(base,0,0,1920,1080);
  if(gesture==='smoke')drawCigaretteSmoke(now);
- if(gesture!=='smoke')clipMouth(speaking?images.talk:images.idle);
+ if(gesture!=='smoke')clipMouth(mouthOpen?images.talk:images.idle);
  clipEyePatches(blink?images.blink:images.idle);
  ctx.restore();
  }
- if(dock){$('meter').style.width=Math.max(0,Math.min(100,(db+70)/70*100))+'%';$('volume').textContent=muted?'マイク消音':db>-90?Math.round(db)+' dB':'無音';
- $('mouth').textContent=speaking?'話しています':'口を閉じています';}
+ if(dock){if(gesture!==lastShownGesture){lastShownGesture=gesture;for(const b of document.querySelectorAll('[data-gesture]'))b.classList.toggle('active',b.dataset.gesture===gesture);}$('meter').style.width=Math.max(0,Math.min(100,(db+70)/70*100))+'%';$('volume').textContent=muted?'マイク消音':db>-90?Math.round(db)+' dB':'無音';
+ $('mouth').textContent=gesture==='smile'?'にっこり':speaking?'話しています':'待機中';}
  requestAnimationFrame(frame);
 }
 async function loadImages(){
@@ -155,12 +159,15 @@ if(dock){
  $('device').onchange=guard(async()=>{await request('SetInputSettings',{inputName:cfg.mic,inputSettings:{device_id:$('device').value},overlay:true});setNotice('マイク機器を切り替えました。');});
  $('threshold').oninput=()=>{cfg.threshold=Number($('threshold').value);applySettings(cfg);};
  $('threshold').onchange=guard(save);
- for(const key of ['auto','smoking','kotatsu'])$(key).onchange=guard(async()=>{cfg[key]=$(key).checked;await save();});
+ for(const key of ['auto','smoking','kotatsu','background'])$(key).onchange=guard(async()=>{cfg[key]=$(key).checked;await save();});
  for(const button of document.querySelectorAll('[data-gesture]'))button.onclick=guard(async()=>{triggerGesture(button.dataset.gesture);await sendEvent({kind:'gesture',gesture:button.dataset.gesture});});
  $('test').onclick=guard(async()=>{testUntil=performance.now()+4500;await sendEvent({kind:'test'});setNotice('4秒間の口パクテスト。実際のマイク入力とは別です。');});
  $('calibrate').onclick=guard(async()=>{if(!cfg.mic)throw Error('先にマイクを選んでください。');calibration=[];setNotice('1秒間、周りの音量を測っています。');await new Promise(r=>setTimeout(r,1100));const samples=calibration;calibration=null;if(!samples.length)throw Error('マイクの音量を受信できません。OBSのマイクを確認してください。');samples.sort((a,b)=>a-b);cfg.threshold=Math.max(-55,Math.min(-20,Math.round(samples[Math.floor(samples.length*.9)]+10)));await save();setNotice('調整しました。話し声で口が動くか確認してください。');});
  $('addMic').onclick=guard(async()=>{const list=await request('GetInputList');if(list.inputs.some(i=>i.inputName==='キャラ用マイク'))cfg.mic='キャラ用マイク';else{const scene=await request('GetCurrentProgramScene');await request('CreateInput',{sceneName:scene.currentProgramSceneName,inputName:'キャラ用マイク',inputKind:'wasapi_input_capture',inputSettings:{device_id:'default',use_device_timing:false},sceneItemEnabled:true});cfg.mic='キャラ用マイク';}await refreshInputs();await save();});
- $('connect').onclick=()=>{password=$('password').value;connect();};
+ $('connect').onclick=()=>{port=Math.max(1,Math.min(65535,Number($('port').value)||4455));password=$('password').value;connect();};
+ $('installOBS').onclick=guard(async()=>{await installOBS();await refreshInputs();await save();});
+ const copyURL=async file=>{if(!ready)throw Error('先にこのPCのOBSへ接続してください。');const u=new URL(file,location.href);u.searchParams.set('rev','5');u.hash=new URLSearchParams({p:password,port:String(port)}).toString();await navigator.clipboard.writeText(u.href);setNotice('このPC用の設定URLをコピーしました。OBSへ貼り付けてください。');};
+ $('copyOverlay').onclick=guard(()=>copyURL('overlay.html'));$('copyDock').onclick=guard(()=>copyURL('index.html'));
 }
 loadImages().catch(e=>{lastError=e.message;setNotice(e.message);});
 connect();requestAnimationFrame(frame);

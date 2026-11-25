@@ -1,0 +1,9 @@
+画像は内蔵image_genを使用。
+
+基本キャラの背景透過プロンプト:
+背景だけを透明にしてください。画像のキャラクターのポーズ、短い手、体型、顔、服、線、色はそのまま変更しないでください。キャラクター全体が入った背景透過PNG。灰色の背景と床の影だけを除去してください。
+
+配信部屋の画像編集プロンプト:
+Edit this 16:9 illustrated room into a CUTE MAN'S LIVESTREAMING / GAMING ROOM with a friendly Batman-inspired bat theme. Keep the cozy hand drawn cartoon illustration style, broad clear foreground floor, and the circular moon/star window in the UPPER RIGHT in the same position. Remove the pink bow curtains, heart decorations and heart cushions; replace with charcoal/navy simple curtains and small black/yellow bat-wing cushions. Masculine but cute and rounded, not scary or militaristic. Add a compact STREAMING DESK against the LEFT BACK WALL: two monitors showing abstract blue/purple gradients without text, small RGB keyboard, a black microphone on a boom arm, headphones hanging on the desk, a small black PC tower with soft cyan light, and a low black/grey rounded gaming chair tucked at the desk. Equipment stays in the BACK LEFT area, not blocking the center foreground space reserved for a lying mascot. Palette charcoal, slate blue, restrained cyan and warm muted amber; yellow bat accents, no pink hearts. Keep small warm lamp lighting and moonlit window. NO PEOPLE, NO MASCOT, NO WORDS, no branded product text, no watermark. High quality finished 1920x1080 16:9 streaming background.
+
+おなら音: 48kHz/16bit/monoの手続き的な合成音。0.78秒。外部の音源や人の録音は使用していません。
