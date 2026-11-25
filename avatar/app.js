@@ -121,7 +121,7 @@ function handleEvent(e){
  }
  if(d.kind==='gesture'&&d.sender!==clientId)triggerGesture(d.gesture);
  if(d.kind==='test')testUntil=performance.now()+4500;
- if(d.kind==='diagnostics')sendEvent({kind:'diagnostics-response',mode,build:'original-art-moods-v2',expression:cfg.expression,mouthOpen:lastMouthOpen,autoMotions:eligibleAutoMotions(),autoInterval:cfg.autoInterval,palette:paletteReport,ready,imagesReady,mic:cfg.mic,sfxVolume:cfg.sfxVolume,error:lastError,gesture,layout:{scale:cfg.scale,posX:cfg.posX,posY:cfg.posY}}).catch(()=>{});
+ if(d.kind==='diagnostics')sendEvent({kind:'diagnostics-response',mode,build:'held-emotions-v4',emotions:window.batEmotionDiagnostics?.(),expression:cfg.expression,mouthOpen:lastMouthOpen,autoMotions:eligibleAutoMotions(),autoInterval:cfg.autoInterval,palette:paletteReport,ready,imagesReady,mic:cfg.mic,sfxVolume:cfg.sfxVolume,error:lastError,gesture,layout:{scale:cfg.scale,posX:cfg.posX,posY:cfg.posY}}).catch(()=>{});
  if(d.kind==='hello'&&!dock)sendEvent({kind:'settings',settings:cfg}).catch(()=>{});
  }
 }
@@ -144,7 +144,7 @@ function runAutoMotion(now){
  const pick=pool[autoCursor%pool.length];autoCursor=(autoCursor+1)%pool.length;
  triggerGesture(pick);sendEvent({kind:'gesture',gesture:pick}).catch(()=>{});
 }
-async function chooseExpression(name){if(!Object.prototype.hasOwnProperty.call(expressionNames,name))return;cfg.expression=name;await save();setNotice(expressionNames[name]+'の演出に切替。目と口は元のイラストを使います。');}
+async function chooseExpression(name){if(!Object.prototype.hasOwnProperty.call(expressionNames,name))return;cfg.expression=name;await save();setNotice(expressionNames[name]+'の表情を保持。話すと口パクします。');}
 
 function frame(now){
  const dt=Math.min(.08,(now-lastFrame)/1000||.016);lastFrame=now;
@@ -163,11 +163,16 @@ function frame(now){
  
  ctx.save();ctx.translate(cfg.posX,cfg.posY);ctx.translate(960,540);ctx.scale(cfg.scale/100,cfg.scale/100);ctx.translate(-960,-540);
  
+ drawFart(now);
+ const drawn=cfg.expression!=='normal'&&window.drawBatEmotion?.(ctx,cfg.expression,mouthOpen,blink,gesture);
+ if(!drawn){
  const base=gesture==='scratch'?images.scratch:gesture==='smoke'?images.smoke:images.body;
- drawFart(now);if(base===images.body){ctx.save();ctx.transform(2.31100039,0.06312966,-0.06312966,2.31100039,-1505.98365482,-628.16518387);ctx.drawImage(images.body,0,0);ctx.restore();}else ctx.drawImage(base,0,0,1920,1080);
+ if(base===images.body){ctx.save();ctx.transform(2.31100039,0.06312966,-0.06312966,2.31100039,-1505.98365482,-628.16518387);ctx.drawImage(images.body,0,0);ctx.restore();}else ctx.drawImage(base,0,0,1920,1080);
  if(gesture!=='smoke')clipMouth(mouthOpen?images.talk:images.idle);
  clipEyePatches(blink?images.blink:images.idle);
- if(typeof window.drawBatMood==='function')window.drawBatMood(ctx,cfg.expression,now);
+ 
+
+ }
  if(gesture==='smoke')drawCigaretteSmoke(now);
  ctx.restore();
  }
@@ -199,7 +204,7 @@ function normalizeMotionPalette(){
 async function loadImages(){
  const names=['idle','talk','blink','scratch','smoke','body'];
  await Promise.all(names.map(name=>new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>{images[name]=image;resolve();};image.onerror=()=>reject(Error('キャラ画像を読み込めません: '+name));image.src='assets/'+name+'.png?v=4';})));
- normalizeMotionPalette();imagesReady=true;
+ normalizeMotionPalette();window.prepareBatEmotions(images);imagesReady=true;if(dock)for(const c of document.querySelectorAll('[data-face-thumb]'))window.paintBatEmotionThumbnail(c,c.dataset.faceThumb);
 }
 function guard(fn){return (...args)=>Promise.resolve().then(()=>fn(...args)).catch(e=>setNotice(e.message));}
 if(dock){
