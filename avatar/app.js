@@ -53,7 +53,7 @@ async function refreshInputs(){
  if(dock){$('mic').replaceChildren();if(!inputList.length){const o=document.createElement('option');o.value='';o.textContent='マイクを追加してください';$('mic').append(o);}
  for(const i of inputList){const o=document.createElement('option');o.value=i.inputName;o.textContent=i.inputName;$('mic').append(o);}
  $('mic').value=cfg.mic;}
- await checkMute();return list;
+ await checkMute();if(dock)await refreshDevices();return list;
 }
 async function installOBS(){
  const sceneName='BAT キャラ配信',inputName='BAT キャラ（ブラウザ）';
@@ -67,6 +67,7 @@ async function installOBS(){
  const stream=await request('GetStreamStatus');if(!stream.outputActive)await request('SetCurrentProgramScene',{sceneName});
  setNotice('OBSにキャラを追加しました。話すと口が動きます。');
 }
+async function refreshDevices(){if(!cfg.mic)return;try{const [r,s]=await Promise.all([request('GetInputPropertiesListPropertyItems',{inputName:cfg.mic,propertyName:'device_id'}),request('GetInputSettings',{inputName:cfg.mic})]);$('device').replaceChildren();for(const item of r.propertyItems.filter(i=>i.itemEnabled)){const o=document.createElement('option');o.value=item.itemValue;o.textContent=item.itemName;$('device').append(o);}$('device').value=s.inputSettings.device_id||'default';}catch{}}
 async function initialize(){
  if(dock&&hash.get('setup')==='1'&&!window.batSetupDone){await installOBS();window.batSetupDone=true;}
 
@@ -143,6 +144,7 @@ function guard(fn){return (...args)=>Promise.resolve().then(()=>fn(...args)).cat
 if(dock){
  $('mic').onchange=guard(async()=>{cfg.mic=$('mic').value;await save();});
  $('refresh').onclick=guard(refreshInputs);
+ $('device').onchange=guard(async()=>{await request('SetInputSettings',{inputName:cfg.mic,inputSettings:{device_id:$('device').value},overlay:true});setNotice('マイク機器を切り替えました。');});
  $('threshold').oninput=()=>{cfg.threshold=Number($('threshold').value);applySettings(cfg);};
  $('threshold').onchange=guard(save);
  for(const key of ['auto','smoking','kotatsu'])$(key).onchange=guard(async()=>{cfg[key]=$(key).checked;await save();});
