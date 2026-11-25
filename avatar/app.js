@@ -70,13 +70,13 @@ async function installOBS(){
 async function initialize(){
  if(dock&&hash.get('setup')==='1'&&!window.batSetupDone){await installOBS();window.batSetupDone=true;}
 
- try{const saved=await request('GetPersistentData',{realm:'OBS_WEBSOCKET_REALM_PROFILE',slotName:slot});if(saved.slotValue&&typeof saved.slotValue==='object')applySettings(saved.slotValue);}catch{}
+ try{const saved=await request('GetPersistentData',{realm:'OBS_WEBSOCKET_DATA_REALM_PROFILE',slotName:slot});if(saved.slotValue&&typeof saved.slotValue==='object')applySettings(saved.slotValue);}catch{}
  await refreshInputs();applySettings(cfg);
  if(dock){setNotice(cfg.mic?'準備完了。話すと口が動きます。':'「OBSマイクを追加」から入力を設定してください。');await sendEvent({kind:'hello'});}
 }
 function sendEvent(data){return request('BroadcastCustomEvent',{eventData:{system,...data}});}
 async function save(){
- applySettings(cfg);await request('SetPersistentData',{realm:'OBS_WEBSOCKET_REALM_PROFILE',slotName:slot,slotValue:cfg});
+ applySettings(cfg);await request('SetPersistentData',{realm:'OBS_WEBSOCKET_DATA_REALM_PROFILE',slotName:slot,slotValue:cfg});
  await sendEvent({kind:'settings',settings:cfg});
 }
 function handleEvent(e){
