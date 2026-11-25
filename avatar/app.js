@@ -3,9 +3,9 @@
 const mode=document.body.dataset.mode, dock=mode==='dock', $=id=>document.getElementById(id);
 const canvas=$('stage'), ctx=canvas.getContext('2d',{alpha:true});
 const hash=new URLSearchParams(location.hash.slice(1));
-const motionNames={scratch:'ぽりぽり',smoke:'一服',fart:'おなら',blink:'瞬き',smile:'にっこり'};
+const motionNames={scratch:'ぽりぽり',smoke:'一服',fart:'おなら'};
 const expressionNames={normal:'通常',joy:'喜',anger:'怒',sadness:'哀',delight:'楽'};
-const defaults={expression:'normal',autoMotions:['scratch','smoke','blink','smile'],autoInterval:60,mic:'',threshold:-42,auto:true,smoking:true,kotatsu:false,scale:100,posX:0,posY:0,sfxVolume:35,background:true};
+const defaults={expression:'normal',autoMotions:['scratch','smoke'],autoInterval:60,mic:'',threshold:-42,auto:true,smoking:true,kotatsu:false,scale:100,posX:0,posY:0,sfxVolume:35,background:true};
 let cfg={...defaults}, socket, ready=false, retry, intentional=false, seq=0, waiting=new Map(), inputList=[], muted=false;
 let lastMouthOpen=false;
 let rmsDb=-100,mouthPhase=0,manualBlinkUntil=0,lastShownGesture='';
@@ -45,7 +45,7 @@ async function connect(){
  if(!intentional)retry=setTimeout(connect,e.code===4009?10000:2500);};
 }
 function applySettings(next){const previousMic=cfg.mic;
- if(!Object.prototype.hasOwnProperty.call(next,'autoMotions')&&Object.prototype.hasOwnProperty.call(next,'smoking'))next={...next,autoMotions:['scratch',...(next.smoking?['smoke']:[]),'blink','smile']};
+ if(!Object.prototype.hasOwnProperty.call(next,'autoMotions')&&Object.prototype.hasOwnProperty.call(next,'smoking'))next={...next,autoMotions:['scratch',...(next.smoking?['smoke']:[])]};
  cfg={...cfg,...next};cfg.expression=Object.prototype.hasOwnProperty.call(expressionNames,cfg.expression)?cfg.expression:'normal';cfg.autoMotions=Array.isArray(cfg.autoMotions)?[...new Set(cfg.autoMotions.filter(k=>Object.prototype.hasOwnProperty.call(motionNames,k)))]:[...defaults.autoMotions];cfg.autoInterval=Math.max(10,Math.min(600,Math.round(Number(cfg.autoInterval)||60)));
  const nextAutoSignature=JSON.stringify([cfg.auto,cfg.autoMotions,cfg.autoInterval,cfg.kotatsu]);if(autoScheduleSignature!==nextAutoSignature){autoScheduleSignature=nextAutoSignature;nextGesture=performance.now()+cfg.autoInterval*1000;autoCursor=0;}cfg.threshold=Math.max(-60,Math.min(-15,Number(cfg.threshold)||-42));cfg.scale=Math.max(30,Math.min(200,Number(cfg.scale)||100));cfg.posX=Math.max(-960,Math.min(960,Number(cfg.posX)||0));cfg.posY=Math.max(-540,Math.min(540,Number(cfg.posY)||0));cfg.sfxVolume=Math.max(0,Math.min(100,Number(cfg.sfxVolume)||0));if(dock){
  $('port').value=port;
@@ -121,12 +121,12 @@ function handleEvent(e){
  }
  if(d.kind==='gesture'&&d.sender!==clientId)triggerGesture(d.gesture);
  if(d.kind==='test')testUntil=performance.now()+4500;
- if(d.kind==='diagnostics')sendEvent({kind:'diagnostics-response',mode,build:'expressions-auto-v1',expression:cfg.expression,mouthOpen:lastMouthOpen,autoMotions:eligibleAutoMotions(),autoInterval:cfg.autoInterval,palette:paletteReport,ready,imagesReady,mic:cfg.mic,sfxVolume:cfg.sfxVolume,error:lastError,gesture,layout:{scale:cfg.scale,posX:cfg.posX,posY:cfg.posY}}).catch(()=>{});
+ if(d.kind==='diagnostics')sendEvent({kind:'diagnostics-response',mode,build:'original-art-moods-v2',expression:cfg.expression,mouthOpen:lastMouthOpen,autoMotions:eligibleAutoMotions(),autoInterval:cfg.autoInterval,palette:paletteReport,ready,imagesReady,mic:cfg.mic,sfxVolume:cfg.sfxVolume,error:lastError,gesture,layout:{scale:cfg.scale,posX:cfg.posX,posY:cfg.posY}}).catch(()=>{});
  if(d.kind==='hello'&&!dock)sendEvent({kind:'settings',settings:cfg}).catch(()=>{});
  }
 }
 function playFartSound(){if(dock||cfg.sfxVolume<=0)return;const audio=new Audio('assets/fart-real.mp3?v=1');audio.volume=cfg.sfxVolume/100;audio.play().catch(error=>{lastError='効果音: '+error.name+' '+error.message;sendEvent({kind:'sfx-error',message:lastError}).catch(()=>{});});}
-function triggerGesture(name){if(!['normal','wave','scratch','smoke','fart','blink','smile'].includes(name))return;if(name==='blink')manualBlinkUntil=performance.now()+170;if(name==='fart'){fartStart=performance.now();playFartSound();}gesture=name;gestureUntil=performance.now()+({normal:0,wave:4300,scratch:2900,smoke:6100,fart:1800,blink:420,smile:1600}[name]);}
+function triggerGesture(name){if(!['normal','scratch','smoke','fart'].includes(name))return;if(name==='fart'){fartStart=performance.now();playFartSound();}gesture=name;gestureUntil=performance.now()+({normal:0,wave:4300,scratch:2900,smoke:6100,fart:1800,blink:420,smile:1600}[name]);}
 function clipEyePatches(image){
  ctx.save();ctx.beginPath();
  ctx.ellipse(1920*.367,1080*.504,1920*.047,1080*.079,-.35,0,Math.PI*2);
@@ -144,7 +144,7 @@ function runAutoMotion(now){
  const pick=pool[autoCursor%pool.length];autoCursor=(autoCursor+1)%pool.length;
  triggerGesture(pick);sendEvent({kind:'gesture',gesture:pick}).catch(()=>{});
 }
-async function chooseExpression(name){if(!Object.prototype.hasOwnProperty.call(expressionNames,name))return;cfg.expression=name;await save();setNotice(expressionNames[name]+'の表情に切替。話すと口パクします。');}
+async function chooseExpression(name){if(!Object.prototype.hasOwnProperty.call(expressionNames,name))return;cfg.expression=name;await save();setNotice(expressionNames[name]+'の演出に切替。目と口は元のイラストを使います。');}
 
 function frame(now){
  const dt=Math.min(.08,(now-lastFrame)/1000||.016);lastFrame=now;
@@ -153,7 +153,7 @@ function frame(now){
  if(fake||(ready&&!muted&&db>=cfg.threshold)){speaking=true;holdUntil=now+125;}
  else if(now>holdUntil&&db<cfg.threshold-4)speaking=false;
  if(now>=nextBlink){blinkUntil=now+115;nextBlink=now+2800+Math.random()*3600;}
- const blink=now<blinkUntil||now<manualBlinkUntil||gesture==='smile';
+ const blink=now<blinkUntil||now<manualBlinkUntil;
  if(gesture!=='normal'&&now>gestureUntil)gesture='normal';
  runAutoMotion(now);
  const energy=Math.max(0,Math.min(1,(rmsDb-cfg.threshold+8)/25));mouthPhase+=dt*(3.4+energy*2.1+.35*Math.sin(now/580))*Math.PI*2;
@@ -165,15 +165,9 @@ function frame(now){
  
  const base=gesture==='scratch'?images.scratch:gesture==='smoke'?images.smoke:images.body;
  drawFart(now);if(base===images.body){ctx.save();ctx.transform(2.31100039,0.06312966,-0.06312966,2.31100039,-1505.98365482,-628.16518387);ctx.drawImage(images.body,0,0);ctx.restore();}else ctx.drawImage(base,0,0,1920,1080);
- const emotional=cfg.expression!=='normal'&&typeof window.drawBatExpression==='function';
- if(emotional){
-  clipEyePatches(images.idle);clipMouth(images.idle);
-  window.drawBatExpression(ctx,cfg.expression,mouthOpen,now<blinkUntil||now<manualBlinkUntil);
-  if(gesture==='smoke')ctx.drawImage(images.smoke,912,594,144,57,912,594,144,57);
- }else{
-  if(gesture!=='smoke')clipMouth(mouthOpen?images.talk:images.idle);
-  clipEyePatches(blink?images.blink:images.idle);
- }
+ if(gesture!=='smoke')clipMouth(mouthOpen?images.talk:images.idle);
+ clipEyePatches(blink?images.blink:images.idle);
+ if(typeof window.drawBatMood==='function')window.drawBatMood(ctx,cfg.expression,now);
  if(gesture==='smoke')drawCigaretteSmoke(now);
  ctx.restore();
  }
@@ -210,7 +204,7 @@ async function loadImages(){
 function guard(fn){return (...args)=>Promise.resolve().then(()=>fn(...args)).catch(e=>setNotice(e.message));}
 if(dock){
  for(const tab of document.querySelectorAll('[data-tab]'))tab.onclick=()=>{for(const b of document.querySelectorAll('[data-tab]')){const selected=b===tab;b.setAttribute('aria-selected',String(selected));document.getElementById('panel-'+b.dataset.tab).hidden=!selected;}};
- document.addEventListener('keydown',e=>{if(/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)||e.ctrlKey||e.altKey||e.metaKey)return;if(e.repeat)return;const expressions={q:'joy',w:'anger',e:'sadness',r:'delight',n:'normal'};if(expressions[e.key.toLowerCase()]){e.preventDefault();chooseExpression(expressions[e.key.toLowerCase()]).catch(error=>setNotice(error.message));return;}const names={'1':'scratch','2':'smoke','3':'fart','4':'blink','5':'smile','0':'normal'};if(names[e.key]){e.preventDefault();triggerGesture(names[e.key]);sendEvent({kind:'gesture',gesture:names[e.key]}).catch(()=>{});}});
+ document.addEventListener('keydown',e=>{if(/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)||e.ctrlKey||e.altKey||e.metaKey)return;if(e.repeat)return;const expressions={q:'joy',w:'anger',e:'sadness',r:'delight',n:'normal'};if(expressions[e.key.toLowerCase()]){e.preventDefault();chooseExpression(expressions[e.key.toLowerCase()]).catch(error=>setNotice(error.message));return;}const names={'1':'scratch','2':'smoke','3':'fart','0':'normal'};if(names[e.key]){e.preventDefault();triggerGesture(names[e.key]);sendEvent({kind:'gesture',gesture:names[e.key]}).catch(()=>{});}});
  for(const key of ['scale','posX','posY','sfxVolume']){$(key).oninput=()=>{cfg[key]=Number($(key).value);applySettings(cfg);queueLiveSettings();clearTimeout(persistTimer);persistTimer=setTimeout(()=>persistSettings().catch(e=>setNotice(e.message)),400);};$(key).onchange=guard(save);}
  for(const button of document.querySelectorAll('[data-expression]'))button.onclick=guard(()=>chooseExpression(button.dataset.expression));
  for(const input of document.querySelectorAll('[data-auto-motion]'))input.onchange=guard(async()=>{cfg.autoMotions=[...document.querySelectorAll('[data-auto-motion]')].filter(el=>el.checked).map(el=>el.dataset.autoMotion);await save();});

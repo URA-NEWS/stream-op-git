@@ -1,28 +1,28 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="no-referrer"><title>BAT キャラ操作</title><link rel="stylesheet" href="style.css?v=7"></head><body data-mode="dock"><main>
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="no-referrer"><title>BAT キャラ操作</title><link rel="stylesheet" href="style.css?v=8"></head><body data-mode="dock"><main>
 <header><strong>BAT <span>キャラ操作</span></strong><span id="connection" class="badge">接続中</span></header>
 <div class="overview"><div class="preview"><canvas id="stage" width="1920" height="1080"></canvas></div><div class="voice"><span id="mouth">口を閉じています</span><div class="meter"><i id="meter"></i><b id="gate"></b></div><span id="volume">無音</span><button id="test" class="small secondary">口パクを確認</button></div></div>
 <nav role="tablist" aria-label="操作パネル"><button role="tab" aria-selected="true" data-tab="control">操作</button><button role="tab" aria-selected="false" data-tab="expressions">表情</button><button role="tab" aria-selected="false" data-tab="layout">位置・サイズ</button><button role="tab" aria-selected="false" data-tab="connection">接続</button></nav>
 <section id="panel-control" role="tabpanel">
 <div class="section-head"><h2>手動モーション</h2><span>ボタンですぐ動く</span></div>
-<div class="motions"><button data-gesture="scratch"><kbd>1</kbd>ぽりぽり</button><button data-gesture="smoke"><kbd>2</kbd>一服</button><button data-gesture="fart"><kbd>3</kbd>おなら</button><button data-gesture="blink" class="secondary"><kbd>4</kbd>瞬き</button><button data-gesture="smile" class="secondary"><kbd>5</kbd>にっこり</button><button data-gesture="normal" class="secondary"><kbd>0</kbd>通常に戻す</button></div>
+<div class="motions"><button data-gesture="scratch"><kbd>1</kbd>ぽりぽり</button><button data-gesture="smoke"><kbd>2</kbd>一服</button><button data-gesture="fart"><kbd>3</kbd>おなら</button><button data-gesture="normal" class="secondary"><kbd>0</kbd>動きを止める</button></div>
 <p class="hint">このドックを選択中は数字キーでも操作できます。</p>
 <div class="toggle"><label for="auto">自動モーション</label><input id="auto" type="checkbox" checked></div>
 <fieldset class="auto-choices"><legend>自動で出す動きを選択</legend>
-<label><input type="checkbox" data-auto-motion="scratch" checked>ぽりぽり</label><label><input type="checkbox" data-auto-motion="smoke" checked>一服</label><label><input type="checkbox" data-auto-motion="fart">おなら</label><label><input type="checkbox" data-auto-motion="blink" checked>瞬き</label><label><input type="checkbox" data-auto-motion="smile" checked>にっこり</label></fieldset>
+<label><input type="checkbox" data-auto-motion="scratch" checked>ぽりぽり</label><label><input type="checkbox" data-auto-motion="smoke" checked>一服</label><label><input type="checkbox" data-auto-motion="fart">おなら</label></fieldset>
 <div class="interval-row"><label for="autoInterval">再生間隔 <output id="autoIntervalValue">60 秒</output></label><input id="autoInterval" type="number" min="10" max="600" step="5" value="60"><span>秒</span></div>
 <p id="autoSummary" class="schedule" aria-live="polite">選んだ動きを順番に再生します。</p>
 <div class="options"><label><input id="kotatsu" type="checkbox">こたつモード（自動ぽりぽりを休止）</label></div>
 <p class="hint">選択した動きだけを順番に繰り返します。未選択なら待機。「おなら」を選ぶと効果音も自動で鳴ります。</p>
 <label for="sfxVolume">効果音 <output id="sfxVolumeValue">35%</output></label><input id="sfxVolume" type="range" min="0" max="100" value="35"><p class="hint">0%で消音。手動・自動のおならに反映します。</p>
 </section>
-<section id="panel-expressions" role="tabpanel" hidden><div class="section-head"><h2>喜怒哀楽</h2><span>選んだ表情をキープ</span></div>
+<section id="panel-expressions" role="tabpanel" hidden><div class="section-head"><h2>喜怒哀楽の演出</h2><span>元絵の目・口を維持</span></div>
 <div class="expressions">
 <button data-expression="normal" aria-pressed="true" class="secondary expression-normal"><kbd>N</kbd><span class="expression-mark">•ᴗ•</span><strong>通常</strong><small>いつもの顔</small></button>
-<button data-expression="joy" aria-pressed="false" class="secondary"><kbd>Q</kbd><span class="expression-mark">✧ᴗ✧</span><strong>喜</strong><small>きらきら、うれしい</small></button>
-<button data-expression="anger" aria-pressed="false" class="secondary"><kbd>W</kbd><span class="expression-mark">•̀ ⌓ •́</span><strong>怒</strong><small>むっとした顔</small></button>
-<button data-expression="sadness" aria-pressed="false" class="secondary"><kbd>E</kbd><span class="expression-mark">•́ ︵ •̀</span><strong>哀</strong><small>涙目、しょんぼり</small></button>
-<button data-expression="delight" aria-pressed="false" class="secondary"><kbd>R</kbd><span class="expression-mark">⌒ᴗ⌒</span><strong>楽</strong><small>にこにこ、ごきげん</small></button>
-</div><p class="hint">どの表情でも声に合わせて口が開閉します。ボタン、またはドック選択中に Q・W・E・R、Nで切替。手動モーションのあとも選んだ表情を保持します。</p></section>
+<button data-expression="joy" aria-pressed="false" class="secondary"><kbd>Q</kbd><span class="expression-mark">♡</span><strong>喜</strong><small>ハート・きらめき</small></button>
+<button data-expression="anger" aria-pressed="false" class="secondary"><kbd>W</kbd><span class="expression-mark">♯</span><strong>怒</strong><small>怒りマーク</small></button>
+<button data-expression="sadness" aria-pressed="false" class="secondary"><kbd>E</kbd><span class="expression-mark">💧</span><strong>哀</strong><small>しずく</small></button>
+<button data-expression="delight" aria-pressed="false" class="secondary"><kbd>R</kbd><span class="expression-mark">♪</span><strong>楽</strong><small>音符・きらめき</small></button>
+</div><p class="hint">元絵の目・口・体はそのまま。周りの演出を切り替えます。口パク・瞬きは元の顔パーツを使います。ボタン、またはドック選択中に Q・W・E・R、Nで切替。</p></section>
 <section id="panel-layout" role="tabpanel" hidden><h2>大きさ・位置</h2>
 <label for="scale">大きさ <output id="scaleValue">100%</output></label><input id="scale" type="range" min="30" max="200" value="100">
 <label for="posX">左右 <output id="posXValue">0 px</output></label><input id="posX" type="range" min="-960" max="960" value="0">
@@ -34,4 +34,4 @@
 <details><summary>OBSの音声ソース</summary><label for="mic">連動する音声ソース</label><select id="mic"><option value="">読み込み中</option></select><button id="addMic" class="secondary full">OBSマイクを追加</button></details>
 <details id="connectPanel"><summary>OBSへの接続</summary><label for="port">OBSポート</label><input id="port" type="number" min="1" max="65535" value="4455"><label for="password">OBSパスワード</label><input id="password" type="password" autocomplete="off"><button id="connect" class="full">接続する</button><p class="hint">このPCのOBSに直接接続します。音声とパスワードを外部に送信しません。</p></details>
 <details><summary>別のPCで使う</summary><p>そのPCのOBSで「ツール → WebSocketサーバー設定」を有効にし、上の接続欄にそのPCのパスワードを入力します。</p><button id="installOBS" class="full">このPCのOBSにキャラを追加</button><div class="row"><button id="copyOverlay" class="secondary">表示URLをコピー</button><button id="copyDock" class="secondary">ドックURLをコピー</button></div><p class="hint">表示URLはブラウザソース、ドックURLはカスタムブラウザドックへ。ローカルサーバーは不要です。コピーした設定URLはこのPC専用です。</p></details>
-</section><footer id="notice" role="status">OBSのマイク音量で動きます。</footer></main><script src="background.js?v=5" defer></script><script src="expressions.js?v=7" defer></script><script src="app.js?v=7" defer></script></body></html>
+</section><footer id="notice" role="status">OBSのマイク音量で動きます。</footer></main><script src="background.js?v=5" defer></script><script src="expressions.js?v=8" defer></script><script src="app.js?v=8" defer></script></body></html>
