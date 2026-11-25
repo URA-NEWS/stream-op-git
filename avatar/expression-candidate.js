@@ -14,21 +14,17 @@ function eye(g,x,y,side,emotion,blink){
   oval(g,0,emotion==='sadness'?7:1,31,37,ink);
   g.save();g.rotate(-.1);oval(g,-9,emotion==='sadness'?-7:-13,13,6,paper);oval(g,7,emotion==='sadness'?27:20,10,3,paper);g.restore();g.restore();
   if(emotion==='anger')stroke(g,p=>{p.moveTo(-34,side<0?-21:0);p.lineTo(34,side<0?0:-21);},7);
-  if(emotion==='sadness'){g.fillStyle='#b1d7e7';g.strokeStyle='#6e9daf';g.lineWidth=2;g.beginPath();g.moveTo(side*35,22);g.bezierCurveTo(side*25,37,side*22,48,side*34,50);g.bezierCurveTo(side*47,51,side*48,39,side*35,22);g.fill();g.stroke();}
+  if(emotion==='sadness'){g.fillStyle='#b1d7e7';g.strokeStyle='#6e9daf';g.lineWidth=2;g.beginPath();g.moveTo(side*17,35);g.bezierCurveTo(side*16,57,side*34,76,side*24,94);g.bezierCurveTo(side*12,109,side*1,95,side*7,82);g.bezierCurveTo(side*12,66,side*5,48,side*6,36);g.fill();g.stroke();}
  }
  g.restore();
 }
 function mouth(g,emotion,open){
  g.save();g.translate(1920*.451,1080*.577);g.rotate(-.35);
  oval(g,0,1,62,67,paper);g.strokeStyle=ink;g.lineCap='round';g.lineJoin='round';
- if(emotion==='anger'||emotion==='sadness'){
-  if(open){g.fillStyle=paper;g.beginPath();g.moveTo(-13,3);g.quadraticCurveTo(0,-4,13,3);g.quadraticCurveTo(20,30,0,29);g.quadraticCurveTo(-20,30,-13,3);g.fill();g.lineWidth=6;g.stroke();}
-  else stroke(g,p=>{p.moveTo(-17,12);p.quadraticCurveTo(0,-3,17,12);});
- }else{
-  // The lower opening touches both corners of the upper lip: ONE mouth.
-  if(open){g.fillStyle=paper;g.beginPath();g.moveTo(-9,7);g.quadraticCurveTo(0,8,10,7);g.lineTo(7,27);g.quadraticCurveTo(0,37,-7,26);g.closePath();g.fill();stroke(g,p=>{p.moveTo(-9,7);p.lineTo(-7,26);p.quadraticCurveTo(0,37,7,27);p.lineTo(10,7);});}
-  stroke(g,p=>{p.moveTo(-22,-9);p.bezierCurveTo(-25,8,-6,14,0,-3);p.bezierCurveTo(4,13,24,8,23,-9);});
- }
+ if(emotion==='anger')g.scale(.85,.85);
+ // Same connected omega-and-opening construction in every emotion.
+ if(open){g.fillStyle=paper;g.beginPath();g.moveTo(-9,7);g.quadraticCurveTo(0,8,10,7);g.lineTo(7,emotion==='sadness'?34:27);g.quadraticCurveTo(0,emotion==='sadness'?44:37,-7,emotion==='sadness'?33:26);g.closePath();g.fill();stroke(g,p=>{p.moveTo(-9,7);p.lineTo(-7,emotion==='sadness'?33:26);p.quadraticCurveTo(0,emotion==='sadness'?44:37,7,emotion==='sadness'?34:27);p.lineTo(10,7);});}
+ stroke(g,p=>{p.moveTo(-22,-9);p.bezierCurveTo(-25,8,-6,14,0,-3);p.bezierCurveTo(4,13,24,8,23,-9);});
  g.restore();
 }
 function face(g,emotion,open,blink){eye(g,W*.367,H*.504,-1,emotion,blink);eye(g,W*.491,H*.416,1,emotion,blink);mouth(g,emotion,open);}
