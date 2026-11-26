@@ -11,7 +11,7 @@
  function fail(message){stop(message);status('error',message);}
  function interrupt(){if(api?.readyState===1){api.send(JSON.stringify({type:'response.cancel'}));api.send(JSON.stringify({type:'input_audio_buffer.clear'}));}resetPlayback();}
  function applyDepth(name){const depth=BatVoicePolicy.depths[name]||BatVoicePolicy.depths.medium;if(api?.readyState===1)api.send(JSON.stringify({type:'session.update',session:{type:'realtime',instructions:BatVoicePolicy.instructions+'\n'+depth.instructions,max_output_tokens:depth.tokens}}));}
- function ask(text){text=String(text||'').trim().slice(0,1500);if(!text||api?.readyState!==1)return;api.send(JSON.stringify({type:'conversation.item.create',item:{type:'message',role:'user',content:[{type:'input_text',text}]}}));api.send(JSON.stringify({type:'response.create'}));}
+ function ask(text){text=String(text||'').trim().slice(0,1500);if(!text||api?.readyState!==1)return;status('thinking','考えています');api.send(JSON.stringify({type:'conversation.item.create',item:{type:'message',role:'user',content:[{type:'input_text',text}]}}));api.send(JSON.stringify({type:'response.create'}));}
  async function prepare(){
   try{const permission=await navigator.mediaDevices.getUserMedia({audio:true});permission.getTracks().forEach(t=>t.stop());const devices=(await navigator.mediaDevices.enumerateDevices()).filter(d=>d.kind==='audioinput');
    $('helperMic').replaceChildren(...devices.map(d=>{const o=document.createElement('option');o.value=d.deviceId;o.textContent=d.label||'マイク';return o;}));
@@ -35,7 +35,8 @@
    if(myGeneration!==generation){socket.close();return;}
    socket.onmessage=e=>{let m;try{m=JSON.parse(e.data);}catch{return;}
     if(m.type==='response.output_audio.delta'||m.type==='response.audio.delta'){bus.send({kind:'audio',sender:id,session:activeSession,pcm:m.delta}).catch(()=>stop('OBS接続が切れたため停止'));if(state!=='speaking')status('speaking','AIが話しています');}
-    if(m.type==='input_audio_buffer.speech_started'){resetPlayback();status('listening','聞いています');}
+    if(m.type==='input_audio_buffer.speech_started'){resetPlayback();status('question','聞いています');}
+    if(m.type==='input_audio_buffer.speech_stopped')status('thinking','考えています');
     if(m.type==='response.done')status('listening','話しかけてください');
     if(m.type==='response.output_audio_transcript.delta'||m.type==='response.audio_transcript.delta')$('helperReply').textContent=($('helperReply').textContent+m.delta).slice(-2000);
     if(m.type==='error'&&m.error?.code!=='response_cancel_not_active')fail('AI接続エラー。残高・API設定を確認してください。');
@@ -47,7 +48,7 @@
    audioContext=new AudioContext();await audioContext.audioWorklet.addModule('voice-capture-worklet.js?v=1');await audioContext.resume();
    if(myGeneration!==generation)return;
    const source=audioContext.createMediaStreamSource(stream);processor=new AudioWorkletNode(audioContext,'bat-mic',{numberOfInputs:1,numberOfOutputs:1,outputChannelCount:[1]});const silent=audioContext.createGain();silent.gain.value=0;source.connect(processor).connect(silent).connect(audioContext.destination);
-   processor.port.onmessage=e=>{if(socket.readyState!==1||!running)return;if(socket.bufferedAmount>262144)return fail('音声接続が遅延したため停止しました。');socket.send(JSON.stringify({type:'input_audio_buffer.append',audio:bytes64(e.data)}));};
+   processor.port.onmessage=e=>{if(socket.readyState!==1||!running)return;if(socket.bufferedAmount>262144)return fail('音声接続が遅延したため停止しました。');const pcm=new Int16Array(e.data);let power=0;for(const x of pcm)power+=(x/32768)**2;bus.send({kind:'input-level',sender:id,session:activeSession,level:Math.min(1,Math.sqrt(power/pcm.length)*5)}).catch(()=>{});socket.send(JSON.stringify({type:'input_audio_buffer.append',audio:bytes64(e.data)}));};
    running=true;sessionStarted=Date.now();timer=setTimeout(()=>stop('15分経過したため自動OFF'),15*60000);$('helperReply').textContent='';await resetPlayback();status('listening','話しかけてください');
   }catch(e){if(myGeneration!==generation)return;fail(e.name==='NotAllowedError'?'マイクの許可が必要です。':e.name==='AbortError'?'接続がタイムアウトしました。':e.message);}
  }
