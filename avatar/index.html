@@ -1,4 +1,4 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="no-referrer"><title>BAT キャラ操作</title><link rel="stylesheet" href="style.css?v=12"></head><body data-mode="dock"><main>
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="no-referrer"><title>BAT キャラ操作</title><link rel="stylesheet" href="style.css?v=13"></head><body data-mode="dock"><main>
 <header><strong>BAT <span>キャラ操作</span></strong><span id="connection" class="badge">接続中</span></header>
 <div class="overview"><div class="preview"><canvas id="stage" width="1920" height="1080"></canvas></div><div class="voice"><span id="mouth">口を閉じています</span><div class="meter"><i id="meter"></i><b id="gate"></b></div><span id="volume">無音</span><button id="test" class="small secondary">口パクを確認</button></div></div>
 <nav role="tablist" aria-label="操作パネル"><button role="tab" aria-selected="true" data-tab="control">操作</button><button role="tab" aria-selected="false" data-tab="expressions">表情</button><button role="tab" aria-selected="false" data-tab="layout">位置・サイズ</button><button role="tab" aria-selected="false" data-tab="connection">接続</button></nav>
@@ -11,12 +11,12 @@
 <label><input type="checkbox" data-auto-motion="scratch" checked>ぽりぽり</label><label><input type="checkbox" data-auto-motion="smoke" checked>一服</label><label><input type="checkbox" data-auto-motion="fart">おなら</label></fieldset>
 <div class="interval-row"><label for="autoInterval">再生間隔 <output id="autoIntervalValue">60 秒</output></label><input id="autoInterval" type="number" min="10" max="600" step="5" value="60"><span>秒</span></div>
 <p id="autoSummary" class="schedule" aria-live="polite">選んだ動きを順番に再生します。</p>
-<div class="options"><label><input id="kotatsu" type="checkbox">こたつモード（自動ぽりぽりを休止）</label></div>
+<div class="options"><label><input id="kotatsu" type="checkbox">こたつと小物を表示（自動ぽりぽりを休止）</label></div>
 <p class="hint">選択した動きだけを順番に繰り返します。未選択なら待機。「おなら」を選ぶと効果音も自動で鳴ります。</p>
 <label for="sfxVolume">効果音 <output id="sfxVolumeValue">35%</output></label><input id="sfxVolume" type="range" min="0" max="100" value="35"><p class="hint">0%で消音。手動・自動のおならに反映します。</p>
 </section>
 <section id="panel-expressions" role="tabpanel" hidden><div class="section-head"><h2>喜怒哀楽</h2><span>選んだ表情を保持</span></div>
-<div class="expressions">
+<label for="angerMarkSize">怒りマークの大きさ <output id="angerMarkSizeValue">240%</output></label><input id="angerMarkSize" type="range" min="70" max="400" step="10" value="240"><div class="expressions">
 <button data-expression="normal" aria-pressed="true" class="secondary expression-normal"><kbd>N</kbd><canvas class="expression-mark" data-face-thumb="normal" width="120" height="95" aria-hidden="true"></canvas><strong>通常</strong><small>いつもの顔</small></button>
 <button data-expression="joy" aria-pressed="false" class="secondary"><kbd>Q</kbd><canvas class="expression-mark" data-face-thumb="joy" width="120" height="95" aria-hidden="true"></canvas><strong>喜</strong><small>細い笑い目</small></button>
 <button data-expression="anger" aria-pressed="false" class="secondary"><kbd>W</kbd><canvas class="expression-mark" data-face-thumb="anger" width="120" height="95" aria-hidden="true"></canvas><strong>怒</strong><small>怒りマーク・涙目</small></button>
@@ -28,10 +28,10 @@
 <label for="posX">左右 <output id="posXValue">0 px</output></label><input id="posX" type="range" min="-960" max="960" value="0">
 <label for="posY">上下 <output id="posYValue">0 px</output></label><input id="posY" type="range" min="-540" max="540" value="0">
 <button id="resetLayout" class="secondary full">大きさ・位置を戻す</button>
-<div class="toggle"><label for="background">配信部屋の背景</label><input id="background" type="checkbox" checked></div><p class="hint">背景をオフにするとキャラだけの透過表示になります。</p></section>
+<div class="toggle"><label for="background">配信部屋の背景</label><input id="background" type="checkbox" checked></div><p class="hint">小物はOBSの各ソースでも個別に位置・大きさを調整できます。<a href="materials.html" target="_blank">単体PNG素材</a></p></section>
 <section id="panel-connection" role="tabpanel" hidden><h2>マイク</h2><label for="device">マイク機器</label><div class="row"><select id="device"><option>読み込み中</option></select><button id="refresh" class="secondary small">更新</button></div>
 <label for="threshold">口の開きやすさ <output id="thresholdValue">−42 dB</output></label><input id="threshold" type="range" min="-60" max="-15" value="-42"><div class="labels"><span>小さい声にも反応</span><span>大きい声だけ</span></div><button id="calibrate" class="secondary full">無音を測って調整（1秒）</button>
 <details><summary>OBSの音声ソース</summary><label for="mic">連動する音声ソース</label><select id="mic"><option value="">読み込み中</option></select><button id="addMic" class="secondary full">OBSマイクを追加</button></details>
 <details id="connectPanel"><summary>OBSへの接続</summary><label for="port">OBSポート</label><input id="port" type="number" min="1" max="65535" value="4455"><label for="password">OBSパスワード</label><input id="password" type="password" autocomplete="off"><button id="connect" class="full">接続する</button><p class="hint">このPCのOBSに直接接続します。音声とパスワードを外部に送信しません。</p></details>
 <details><summary>別のPCで使う</summary><p>そのPCのOBSで「ツール → WebSocketサーバー設定」を有効にし、上の接続欄にそのPCのパスワードを入力します。</p><button id="installOBS" class="full">このPCのOBSにキャラを追加</button><div class="row"><button id="copyOverlay" class="secondary">表示URLをコピー</button><button id="copyDock" class="secondary">ドックURLをコピー</button></div><p class="hint">表示URLはブラウザソース、ドックURLはカスタムブラウザドックへ。ローカルサーバーは不要です。コピーした設定URLはこのPC専用です。</p></details>
-</section><footer id="notice" role="status">OBSのマイク音量で動きます。</footer></main><script src="background.js?v=5" defer></script><script src="expressions.js?v=12" defer></script><script src="app.js?v=12" defer></script></body></html>
+</section><footer id="notice" role="status">OBSのマイク音量で動きます。</footer></main><script src="background.js?v=5" defer></script><script src="expressions.js?v=13" defer></script><script src="prop-manifest.js?v=1" defer></script><script src="prop-preview.js?v=1" defer></script><script src="scene-props-setup.js?v=1" defer></script><script src="app.js?v=13" defer></script></body></html>

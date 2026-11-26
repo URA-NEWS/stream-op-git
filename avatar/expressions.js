@@ -61,8 +61,8 @@ function refMouth(g,p,emotion,open){
  const height=open?natural:(emotion==='sadness'?52:43);
  g.save();g.translate(art.closedMouth.cx,art.closedMouth.y+3);g.rotate(-.35);g.drawImage(p.ink,-width/2,0,width,height);g.restore();
 }
-function angerMark(g){
- g.save();g.translate(1200,235);g.rotate(-.35);g.scale(4,4);g.lineCap='round';g.lineJoin='round';
+function angerMark(g,scale=2.4){
+ g.save();g.translate(1138+Math.max(0,scale-1)*22,310-Math.max(0,scale-1)*25);g.rotate(-.35);g.scale(scale,scale);g.lineCap='round';g.lineJoin='round';
  for(let i=0;i<4;i++){g.rotate(Math.PI/2);g.beginPath();g.moveTo(9,-30);g.quadraticCurveTo(9,-9,30,-9);g.strokeStyle='#461e20';g.lineWidth=12;g.stroke();g.strokeStyle='#f47b70';g.lineWidth=7;g.stroke();}
  g.restore();
 }
@@ -92,7 +92,6 @@ function frame(b,emotion,open,blink,pose){
  });
  if(reference)refMouth(g,reference.mouth,emotion,open);
  else glyph(g,open?art.openMouth:art.closedMouth);
- if(emotion==='anger')angerMark(g);
  if(pose==='smoke')cigarette(g);
  return c;
 }
@@ -108,13 +107,14 @@ window.prepareBatEmotions=images=>{
  joy:readReference(images,'refJoy',[[450,258,90,54],[612,267,88,53]],[],[510,318,125,78])
  };
  art={images,eyes,blinks,mouthParts,closedMouth,openMouth,references};ready=true;cache=null;lastKey='';
- report={ready:true,source:'user-provided-three-expression-references',referenceMapping:{sadness:1,anger:2,joy:3},angerMark:true,angerMarkScale:4,eyebrows:false,bodyInvariantExcludes:'face-and-anger-mark',mouthComponentsPerFrame:1,sourceMouth:{closed:{x:closedMouth.x,y:closedMouth.y,w:closedMouth.w,h:closedMouth.h},open:{x:openMouth.x,y:openMouth.y,w:openMouth.w,h:openMouth.h}},eyes:eyes.map(p=>({x:p.x,y:p.y,w:p.w,h:p.h})),frameCount:4};
+ report={ready:true,source:'user-provided-three-expression-references',referenceMapping:{sadness:1,anger:2,joy:3},angerMark:true,angerMarkScale:2.4,eyebrows:false,bodyInvariantExcludes:'face-and-anger-mark',mouthComponentsPerFrame:1,sourceMouth:{closed:{x:closedMouth.x,y:closedMouth.y,w:closedMouth.w,h:closedMouth.h},open:{x:openMouth.x,y:openMouth.y,w:openMouth.w,h:openMouth.h}},eyes:eyes.map(p=>({x:p.x,y:p.y,w:p.w,h:p.h})),frameCount:4};
 };
-window.drawBatEmotion=(g,emotion,open,blink,pose)=>{
+window.drawBatEmotion=(g,emotion,open,blink,pose,markScale=2.4)=>{
+ markScale=Math.max(.7,Math.min(4,Number(markScale)||2.4));
  if(!ready||!['joy','anger','sadness','delight'].includes(emotion))return false;
  pose=['scratch','smoke'].includes(pose)?pose:'normal';const key=emotion+'/'+pose;
  if(key!==lastKey){const b=base(pose);cache=[frame(b,emotion,false,false,pose),frame(b,emotion,true,false,pose),frame(b,emotion,false,true,pose),frame(b,emotion,true,true,pose)];lastKey=key;const before=b.getContext('2d').getImageData(0,0,W,H).data,after=cache[0].getContext('2d').getImageData(0,0,W,H).data;let changed=0;for(let y=0;y<H;y++)for(let x=0;x<W;x++){if((x>=620&&x<=1060&&y>=370&&y<=730)||(emotion==='anger'&&x>=1000&&x<=1420&&y>=0&&y<=440))continue;const k=(y*W+x)*4;if(before[k]!==after[k]||before[k+1]!==after[k+1]||before[k+2]!==after[k+2]||before[k+3]!==after[k+3])changed++;}report.bodyPixelsChangedOutsideFace=changed;report.angerMarkVisible=emotion==='anger';}
- g.drawImage(cache[(blink?2:0)+(open?1:0)],0,0);return true;
+ g.drawImage(cache[(blink?2:0)+(open?1:0)],0,0);if(emotion==='anger')angerMark(g,markScale);report.angerMarkScale=markScale;report.angerMarkVisible=emotion==='anger';return true;
 };
 
 window.paintBatEmotionThumbnail=(target,emotion)=>{
