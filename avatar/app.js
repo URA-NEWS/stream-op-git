@@ -122,7 +122,7 @@ function handleEvent(e){
  }
  if(d.kind==='gesture'&&d.sender!==clientId)triggerGesture(d.gesture);
  if(d.kind==='test')testUntil=performance.now()+4500;
- if(d.kind==='diagnostics')sendEvent({kind:'diagnostics-response',mode,build:'independent-sources-v9',emotions:window.batEmotionDiagnostics?.(),expression:cfg.expression,mouthOpen:lastMouthOpen,autoMotions:eligibleAutoMotions(),autoInterval:cfg.autoInterval,palette:paletteReport,ready,imagesReady,mic:cfg.mic,sfxVolume:cfg.sfxVolume,error:lastError,gesture,layout:{scale:cfg.scale,posX:cfg.posX,posY:cfg.posY}}).catch(()=>{});
+ if(d.kind==='diagnostics')sendEvent({kind:'diagnostics-response',mode,build:'large-fart-v10',emotions:window.batEmotionDiagnostics?.(),expression:cfg.expression,mouthOpen:lastMouthOpen,autoMotions:eligibleAutoMotions(),autoInterval:cfg.autoInterval,palette:paletteReport,ready,imagesReady,mic:cfg.mic,sfxVolume:cfg.sfxVolume,error:lastError,gesture,layout:{scale:cfg.scale,posX:cfg.posX,posY:cfg.posY}}).catch(()=>{});
  if(d.kind==='hello'&&!dock)sendEvent({kind:'settings',settings:cfg}).catch(()=>{});
  }
 }
@@ -136,7 +136,7 @@ function clipEyePatches(image){
 }
 function clipMouth(image){ctx.save();ctx.beginPath();ctx.ellipse(1920*.451,1080*.577,1920*.041,1080*.073,-.35,0,Math.PI*2);ctx.clip();ctx.drawImage(image,0,0,1920,1080);ctx.restore();}
 function drawCigaretteSmoke(now){const time=now/1000;ctx.save();for(let i=0;i<4;i++){const t=(time+i*.85)%3.4/3.4;const x=1040+Math.sin(time*.9+i)*t*30,y=615-t*245;ctx.globalAlpha=Math.sin(Math.PI*t)*.44;ctx.strokeStyle='#dce3ec';ctx.lineWidth=5+6*t;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(x,y);ctx.bezierCurveTo(x-22,y-25,x+29,y-48,x+5,y-80);ctx.stroke();}ctx.restore();}
-function drawFart(now){const age=(now-fartStart)/1000;if(age<0||age>1.8)return;const t=age/1.8;ctx.save();ctx.globalAlpha=Math.min(1,t*10)*Math.pow(1-t,1.4);for(let i=0;i<7;i++){const k=i/6;const x=1470+t*(165+k*110)+Math.sin(i*2.1)*25;const y=918-t*(35+k*70)+Math.cos(i*1.7)*30;const radius=(24+18*Math.sin(i*1.3)**2)*(0.6+t*1.7);ctx.beginPath();ctx.arc(x,y,radius,0,Math.PI*2);ctx.fillStyle=i%2?'#dce9b7':'#e9efce';ctx.fill();ctx.lineWidth=3;ctx.strokeStyle='#a7bb83';ctx.stroke();}ctx.restore();}
+function drawFart(now){const age=(now-fartStart)/1000;if(age<0||age>1.8)return;const t=age/1.8;ctx.save();ctx.globalAlpha=Math.min(1,t*10)*Math.pow(1-t,1.4);for(let i=0;i<7;i++){const k=i/6;const x=1460+t*(95+k*130)+Math.sin(i*2.1)*32;const y=900-t*(70+k*100)+Math.cos(i*1.7)*25;const radius=(24+18*Math.sin(i*1.3)**2)*2.5*(0.6+t*1.5);ctx.beginPath();ctx.arc(x,y,radius,0,Math.PI*2);ctx.fillStyle=i%2?'#dce9b7':'#e9efce';ctx.fill();ctx.lineWidth=3;ctx.strokeStyle='#a7bb83';ctx.stroke();}ctx.restore();}
 function eligibleAutoMotions(){return cfg.autoMotions.filter(k=>!(cfg.kotatsu&&k==='scratch'));}
 function runAutoMotion(now){
  if(!cfg.auto||dock||gesture!=='normal'||now<nextGesture)return;
