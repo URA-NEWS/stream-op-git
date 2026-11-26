@@ -6,7 +6,7 @@ const hash=new URLSearchParams(location.hash.slice(1));
 const motionNames={scratch:'ぽりぽり',smoke:'一服',fart:'おなら'};
 const expressionNames={normal:'通常',joy:'喜',anger:'怒',sadness:'哀',delight:'楽'};
 const defaults={angerMarkScale:2.4,expression:'normal',autoMotions:['scratch','smoke'],autoInterval:60,mic:'',threshold:-42,auto:true,smoking:true,fartSeparate:false,kotatsu:false,roomSeparate:false,figure:true,scale:100,posX:0,posY:0,sfxVolume:35,background:true};
-let cfg={...defaults}, socket, ready=false, retry, intentional=false, seq=0, waiting=new Map(), inputList=[], muted=false;
+let settingsReady=false;let cfg={...defaults}, socket, ready=false, retry, intentional=false, seq=0, waiting=new Map(), inputList=[], muted=false;
 let lastMouthOpen=false;
 let rmsDb=-100,mouthPhase=0,manualBlinkUntil=0,lastShownGesture='';
 let db=-100, lastMeter=0, speaking=false, holdUntil=0, testUntil=0, gesture='normal', gestureUntil=0;
@@ -26,7 +26,7 @@ function request(type,data={}){return new Promise((resolve,reject)=>{
 });}
 async function digest(s){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return btoa(String.fromCharCode(...new Uint8Array(b)));}
 async function connect(){
- clearTimeout(retry);intentional=true;if(socket)socket.close();intentional=false;ready=false;connection('接続中');
+ clearTimeout(retry);intentional=true;if(socket)socket.close();intentional=false;ready=false;settingsReady=false;connection('接続中');
  const ws=new WebSocket('ws://127.0.0.1:'+port);socket=ws;
  ws.onmessage=async e=>{if(ws!==socket)return;let m;try{m=JSON.parse(e.data);}catch{return;}
  try{
@@ -102,12 +102,13 @@ async function refreshDevices(){if(!cfg.mic)return;try{const [r,s]=await Promise
 async function initialize(){
  if(dock&&hash.get('setup')==='1'&&!window.batSetupDone){await installOBS();window.batSetupDone=true;}
 
- try{const saved=await request('GetPersistentData',{realm:'OBS_WEBSOCKET_DATA_REALM_PROFILE',slotName:slot});if(saved.slotValue&&typeof saved.slotValue==='object')applySettings(saved.slotValue);}catch{}
- await refreshInputs();applySettings(cfg);
- if(dock){setNotice(cfg.mic?'準備完了。話すと口が動きます。':'「OBSマイクを追加」から入力を設定してください。');await sendEvent({kind:'hello'});}
+ try{const saved=await request('GetPersistentData',{realm:'OBS_WEBSOCKET_DATA_REALM_PROFILE',slotName:slot});if(saved.slotValue&&typeof saved.slotValue==='object')applySettings(saved.slotValue);}catch{throw Error('保存設定を読み込めません。OBSの接続を確認してください。');}
+ await refreshInputs();applySettings(cfg);settingsReady=true;
+ if(dock){setNotice(cfg.mic?'準備完了。話すと口が動きます。':'「OBSマイクを追加」から入力を設定してください。');await publishSettings();}
 }
 function sendEvent(data){return request('BroadcastCustomEvent',{eventData:{system,sender:clientId,...data}});}
 function publishSettings(){
+ if(!settingsReady)return Promise.resolve();
  if(liveSettingsFrame!==null){cancelAnimationFrame(liveSettingsFrame);liveSettingsFrame=null;}
  return sendEvent({kind:'settings',sender:clientId,sequence:++settingsSequence,settings:{...cfg}});
 }
@@ -115,8 +116,9 @@ function queueLiveSettings(){
  if(liveSettingsFrame!==null)return;
  liveSettingsFrame=requestAnimationFrame(()=>{liveSettingsFrame=null;publishSettings().catch(e=>setNotice(e.message));});
 }
-function persistSettings(){return request('SetPersistentData',{realm:'OBS_WEBSOCKET_DATA_REALM_PROFILE',slotName:slot,slotValue:{...cfg}});}
+function persistSettings(){if(!settingsReady)return Promise.reject(Error('保存設定の読み込み中です'));return request('SetPersistentData',{realm:'OBS_WEBSOCKET_DATA_REALM_PROFILE',slotName:slot,slotValue:{...cfg}});}
 async function save(){
+ if(!settingsReady)throw Error('保存設定の読み込み中です');
  clearTimeout(persistTimer);applySettings(cfg);
  const live=publishSettings();await Promise.all([live,persistSettings()]);
 }
@@ -138,7 +140,7 @@ function handleEvent(e){
  if(d.kind==='gesture'&&d.sender!==clientId)triggerGesture(d.gesture);
  if(d.kind==='test')testUntil=performance.now()+4500;
  if(d.kind==='diagnostics')sendEvent({kind:'diagnostics-response',mode,build:'large-fart-v11',emotions:window.batEmotionDiagnostics?.(),expression:cfg.expression,mouthOpen:lastMouthOpen,autoMotions:eligibleAutoMotions(),autoInterval:cfg.autoInterval,palette:paletteReport,ready,imagesReady,mic:cfg.mic,sfxVolume:cfg.sfxVolume,error:lastError,gesture,layout:{scale:cfg.scale,posX:cfg.posX,posY:cfg.posY}}).catch(()=>{});
- if(d.kind==='hello'&&!dock)sendEvent({kind:'settings',settings:cfg}).catch(()=>{});
+
  }
 }
 function playFartSound(){if(dock||cfg.sfxVolume<=0)return;const audio=new Audio('assets/fart-real.mp3?v=1');audio.volume=cfg.sfxVolume/100;audio.play().catch(error=>{lastError='効果音: '+error.name+' '+error.message;sendEvent({kind:'sfx-error',message:lastError}).catch(()=>{});});}
@@ -163,6 +165,7 @@ function runAutoMotion(now){
 async function chooseExpression(name){if(!Object.prototype.hasOwnProperty.call(expressionNames,name))return;cfg.expression=name;await save();setNotice(expressionNames[name]+'の表情を保持。話すと口パクします。');}
 
 function frame(now){
+ if(!settingsReady){ctx.clearRect(0,0,1920,1080);requestAnimationFrame(frame);return;}
  if(effectOnly){ctx.clearRect(0,0,1920,1080);drawFart(now);requestAnimationFrame(frame);return;}
  const dt=Math.min(.08,(now-lastFrame)/1000||.016);lastFrame=now;
  if(now-lastMeter>350)db=-100;
