@@ -16,9 +16,10 @@ export function createHandler(env=process.env,upstream=fetch){
   const send=(status,body)=>{res.writeHead(status,headers);res.end(JSON.stringify(body));};
   if(origin&&origin!==ALLOWED_ORIGIN)return send(403,{error:'origin_not_allowed'});
   if(req.method==='OPTIONS'){res.writeHead(204,headers);return res.end();}
-  if(req.url==='/health'&&req.method==='GET')return send(200,{ok:true,model:MODEL,configured:Boolean(env.OPENAI_API_KEY&&env.BAT_VOICE_TOKEN)});
+  if(req.url==='/health'&&req.method==='GET')return send(200,{ok:true,model:MODEL,configured:Boolean(env.OPENAI_API_KEY&&env.BAT_VOICE_TOKEN),billing_ready:env.BAT_VOICE_BILLING_READY==='true',budget_usd:5});
   if(req.url!=='/token'||req.method!=='POST')return send(404,{error:'not_found'});
   if(!env.OPENAI_API_KEY||!env.BAT_VOICE_TOKEN)return send(503,{error:'voice_not_configured'});
+  if(env.BAT_VOICE_BILLING_READY!=='true')return send(503,{error:'billing_not_confirmed'});
   const authorization=req.headers.authorization||'';
   if(!matches(authorization,'Bearer '+env.BAT_VOICE_TOKEN))return send(401,{error:'unauthorized'});
   const key=String(req.headers['x-forwarded-for']||req.socket.remoteAddress).split(',')[0],now=Date.now(),previous=limits.get(key);

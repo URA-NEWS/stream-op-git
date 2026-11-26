@@ -27,7 +27,7 @@
    const endpoint=new URL(cfg.endpoint);if(endpoint.protocol!=='https:')throw Error('接続先にはHTTPSが必要です。');
    abort=new AbortController();const wait=setTimeout(()=>abort?.abort(),80000);
    let response;try{response=await fetch(endpoint.origin+'/token',{method:'POST',headers:{Authorization:'Bearer '+cfg.accessToken,'Content-Type':'application/json'},body:JSON.stringify({voice:cfg.voice||'coral',depth:cfg.depth||'medium'}),signal:abort.signal,cache:'no-store'});}finally{clearTimeout(wait);}
-   if(!response.ok){const codes={401:'接続コードを確認してください。',429:'APIの残高または利用制限を確認してください。',503:'サーバーのAPIキー設定待ちです。'};throw Error(codes[response.status]||'音声サーバーに接続できません。');}
+   if(!response.ok){const info=await response.json().catch(()=>({}));if(info.error==='billing_not_confirmed')throw Error('前払いと利用上限の設定確認待ちです。');const codes={401:'接続コードを確認してください。',429:'APIの残高または利用制限を確認してください。',503:'サーバーのAPIキー設定待ちです。'};throw Error(codes[response.status]||'音声サーバーに接続できません。');}
    const token=await response.json();if(typeof token.value!=='string'||!token.value.startsWith('ek_'))throw Error('音声接続を開始できません。');
    if(myGeneration!==generation)return;
    const socket=new WebSocket('wss://api.openai.com/v1/realtime?model='+encodeURIComponent(BatVoice.MODEL),['realtime','openai-insecure-api-key.'+token.value]);api=socket;
