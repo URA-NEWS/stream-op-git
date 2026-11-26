@@ -121,7 +121,7 @@ function handleEvent(e){
  }
  if(d.kind==='gesture'&&d.sender!==clientId)triggerGesture(d.gesture);
  if(d.kind==='test')testUntil=performance.now()+4500;
- if(d.kind==='diagnostics')sendEvent({kind:'diagnostics-response',mode,build:'three-references-v5',emotions:window.batEmotionDiagnostics?.(),expression:cfg.expression,mouthOpen:lastMouthOpen,autoMotions:eligibleAutoMotions(),autoInterval:cfg.autoInterval,palette:paletteReport,ready,imagesReady,mic:cfg.mic,sfxVolume:cfg.sfxVolume,error:lastError,gesture,layout:{scale:cfg.scale,posX:cfg.posX,posY:cfg.posY}}).catch(()=>{});
+ if(d.kind==='diagnostics')sendEvent({kind:'diagnostics-response',mode,build:'three-references-v6',emotions:window.batEmotionDiagnostics?.(),expression:cfg.expression,mouthOpen:lastMouthOpen,autoMotions:eligibleAutoMotions(),autoInterval:cfg.autoInterval,palette:paletteReport,ready,imagesReady,mic:cfg.mic,sfxVolume:cfg.sfxVolume,error:lastError,gesture,layout:{scale:cfg.scale,posX:cfg.posX,posY:cfg.posY}}).catch(()=>{});
  if(d.kind==='hello'&&!dock)sendEvent({kind:'settings',settings:cfg}).catch(()=>{});
  }
 }
