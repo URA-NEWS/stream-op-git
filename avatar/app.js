@@ -1,11 +1,11 @@
 'use strict';
 (()=>{
-const mode=document.body.dataset.mode, dock=mode==='dock', $=id=>document.getElementById(id);
+const mode=document.body.dataset.mode, dock=mode==='dock', effectOnly=mode==='effect', $=id=>document.getElementById(id);
 const canvas=$('stage'), ctx=canvas.getContext('2d',{alpha:true});
 const hash=new URLSearchParams(location.hash.slice(1));
 const motionNames={scratch:'ぽりぽり',smoke:'一服',fart:'おなら'};
 const expressionNames={normal:'通常',joy:'喜',anger:'怒',sadness:'哀',delight:'楽'};
-const defaults={angerMarkScale:2.4,expression:'normal',autoMotions:['scratch','smoke'],autoInterval:60,mic:'',threshold:-42,auto:true,smoking:true,kotatsu:false,roomSeparate:false,figure:true,scale:100,posX:0,posY:0,sfxVolume:35,background:true};
+const defaults={angerMarkScale:2.4,expression:'normal',autoMotions:['scratch','smoke'],autoInterval:60,mic:'',threshold:-42,auto:true,smoking:true,fartSeparate:false,kotatsu:false,roomSeparate:false,figure:true,scale:100,posX:0,posY:0,sfxVolume:35,background:true};
 let cfg={...defaults}, socket, ready=false, retry, intentional=false, seq=0, waiting=new Map(), inputList=[], muted=false;
 let lastMouthOpen=false;
 let rmsDb=-100,mouthPhase=0,manualBlinkUntil=0,lastShownGesture='';
@@ -70,6 +70,15 @@ async function refreshInputs(){
  $('mic').value=cfg.mic;}
  await checkMute();if(dock)await refreshDevices();return list;
 }
+async function installFartSource(sceneName){
+ const inputName='BAT おならエフェクト',list=(await request('GetInputList')).inputs;
+ const url=new URL('fart.html',location.href);url.hash=new URLSearchParams({p:password,port:String(port)}).toString();
+ const inputSettings={url:url.href,width:1920,height:1080,fps:60,fps_custom:true,is_local_file:false,shutdown:false,restart_when_active:false,reroute_audio:false};
+ if(!list.some(i=>i.inputName===inputName))await request('CreateInput',{sceneName,inputName,inputKind:'browser_source',inputSettings,sceneItemEnabled:true});
+ else{await request('SetInputSettings',{inputName,inputSettings,overlay:true});const items=(await request('GetSceneItemList',{sceneName})).sceneItems;if(!items.some(i=>i.sourceName===inputName))await request('CreateSceneItem',{sceneName,sourceName:inputName,sceneItemEnabled:true});}
+ const items=(await request('GetSceneItemList',{sceneName})).sceneItems,avatar=items.find(i=>i.sourceName==='BAT キャラ（ブラウザ）'),effect=items.find(i=>i.sourceName===inputName);
+ if(avatar&&effect){const keys=['positionX','positionY','scaleX','scaleY','rotation','alignment','cropTop','cropLeft','cropRight','cropBottom','boundsType'];await request('SetSceneItemTransform',{sceneName,sceneItemId:effect.sceneItemId,sceneItemTransform:Object.fromEntries(keys.map(k=>[k,avatar.sceneItemTransform[k]]))});await request('SetSceneItemIndex',{sceneName,sceneItemId:effect.sceneItemId,sceneItemIndex:items.length-1});}cfg.fartSeparate=true;
+}
 async function installOBS(){
  const sceneName='BAT キャラ配信',inputName='BAT キャラ（ブラウザ）';
  const scenes=await request('GetSceneList');if(!scenes.scenes.some(s=>s.sceneName===sceneName))await request('CreateScene',{sceneName});
@@ -79,7 +88,7 @@ async function installOBS(){
  await request('SetInputSettings',{inputName,inputSettings,overlay:true});const items=await request('GetSceneItemList',{sceneName});if(!items.sceneItems.some(i=>i.sourceName===inputName))await request('CreateSceneItem',{sceneName,sourceName:inputName,sceneItemEnabled:true});
  }else await request('CreateInput',{sceneName,inputName,inputKind:'browser_source',inputSettings,sceneItemEnabled:true});
  const special=await request('GetSpecialInputs');if(!special.mic1){const available=inputs.inputs.find(i=>/wasapi_input_capture|coreaudio_input_capture|pulse_input_capture/.test(i.inputKind));if(available){const items=await request('GetSceneItemList',{sceneName});if(!items.sceneItems.some(i=>i.sourceName===available.inputName))await request('CreateSceneItem',{sceneName,sourceName:available.inputName,sceneItemEnabled:true});cfg.mic=available.inputName;}else{await request('CreateInput',{sceneName,inputName:'キャラ用マイク',inputKind:'wasapi_input_capture',inputSettings:{device_id:'default',use_device_timing:false},sceneItemEnabled:true});cfg.mic='キャラ用マイク';}}
- await window.installBatPropScene(request,{sceneName,password,port,config:cfg,baseURL:location.href});
+ await window.installBatPropScene(request,{sceneName,password,port,config:cfg,baseURL:location.href});await installFartSource(sceneName);
  const stream=await request('GetStreamStatus');if(!stream.outputActive)await request('SetCurrentProgramScene',{sceneName});
  setNotice('OBSにキャラを追加しました。話すと口が動きます。');
 }
@@ -122,12 +131,12 @@ function handleEvent(e){
  }
  if(d.kind==='gesture'&&d.sender!==clientId)triggerGesture(d.gesture);
  if(d.kind==='test')testUntil=performance.now()+4500;
- if(d.kind==='diagnostics')sendEvent({kind:'diagnostics-response',mode,build:'large-fart-v10',emotions:window.batEmotionDiagnostics?.(),expression:cfg.expression,mouthOpen:lastMouthOpen,autoMotions:eligibleAutoMotions(),autoInterval:cfg.autoInterval,palette:paletteReport,ready,imagesReady,mic:cfg.mic,sfxVolume:cfg.sfxVolume,error:lastError,gesture,layout:{scale:cfg.scale,posX:cfg.posX,posY:cfg.posY}}).catch(()=>{});
+ if(d.kind==='diagnostics')sendEvent({kind:'diagnostics-response',mode,build:'large-fart-v11',emotions:window.batEmotionDiagnostics?.(),expression:cfg.expression,mouthOpen:lastMouthOpen,autoMotions:eligibleAutoMotions(),autoInterval:cfg.autoInterval,palette:paletteReport,ready,imagesReady,mic:cfg.mic,sfxVolume:cfg.sfxVolume,error:lastError,gesture,layout:{scale:cfg.scale,posX:cfg.posX,posY:cfg.posY}}).catch(()=>{});
  if(d.kind==='hello'&&!dock)sendEvent({kind:'settings',settings:cfg}).catch(()=>{});
  }
 }
 function playFartSound(){if(dock||cfg.sfxVolume<=0)return;const audio=new Audio('assets/fart-real.mp3?v=1');audio.volume=cfg.sfxVolume/100;audio.play().catch(error=>{lastError='効果音: '+error.name+' '+error.message;sendEvent({kind:'sfx-error',message:lastError}).catch(()=>{});});}
-function triggerGesture(name){if(!['normal','scratch','smoke','fart'].includes(name))return;if(name==='fart'){fartStart=performance.now();playFartSound();}gesture=name;gestureUntil=performance.now()+({normal:0,wave:4300,scratch:2900,smoke:6100,fart:1800,blink:420,smile:1600}[name]);}
+function triggerGesture(name){if(!['normal','scratch','smoke','fart'].includes(name))return;if(name==='fart'){fartStart=performance.now();if(!effectOnly)playFartSound();}gesture=name;gestureUntil=performance.now()+({normal:0,wave:4300,scratch:2900,smoke:6100,fart:1800,blink:420,smile:1600}[name]);}
 function clipEyePatches(image){
  ctx.save();ctx.beginPath();
  ctx.ellipse(1920*.367,1080*.504,1920*.047,1080*.079,-.35,0,Math.PI*2);
@@ -148,6 +157,7 @@ function runAutoMotion(now){
 async function chooseExpression(name){if(!Object.prototype.hasOwnProperty.call(expressionNames,name))return;cfg.expression=name;await save();setNotice(expressionNames[name]+'の表情を保持。話すと口パクします。');}
 
 function frame(now){
+ if(effectOnly){ctx.clearRect(0,0,1920,1080);drawFart(now);requestAnimationFrame(frame);return;}
  const dt=Math.min(.08,(now-lastFrame)/1000||.016);lastFrame=now;
  if(now-lastMeter>350)db=-100;
  const fake=now<testUntil&&Math.sin(now/105)>-.25;
@@ -164,7 +174,7 @@ function frame(now){
  
  ctx.save();ctx.translate(cfg.posX,cfg.posY);ctx.translate(960,540);ctx.scale(cfg.scale/100,cfg.scale/100);ctx.translate(-960,-540);
  
- drawFart(now);
+ if(dock||!cfg.fartSeparate)drawFart(now);
  const drawn=cfg.expression!=='normal'&&window.drawBatEmotion?.(ctx,cfg.expression,mouthOpen,blink,gesture,cfg.angerMarkScale);
  if(!drawn){
  const base=gesture==='scratch'?images.scratch:gesture==='smoke'?images.smoke:images.body;
@@ -233,7 +243,7 @@ if(dock){
  const copyURL=async file=>{if(!ready)throw Error('先にこのPCのOBSへ接続してください。');const u=new URL(file,location.href);u.searchParams.set('rev','5');u.hash=new URLSearchParams({p:password,port:String(port)}).toString();await navigator.clipboard.writeText(u.href);setNotice('このPC用の設定URLをコピーしました。OBSへ貼り付けてください。');};
  $('copyOverlay').onclick=guard(()=>copyURL('overlay.html'));$('copyDock').onclick=guard(()=>copyURL('index.html'));
 }
-loadImages().catch(e=>{lastError=e.message;setNotice(e.message);});
+if(!effectOnly)loadImages().catch(e=>{lastError=e.message;setNotice(e.message);});
 connect();requestAnimationFrame(frame);
 window.batAvatarDiagnostics=()=>({ready,imagesReady,mic:cfg.mic,threshold:cfg.threshold,db,muted,speaking,gesture,error:lastError,mode});
 })();
