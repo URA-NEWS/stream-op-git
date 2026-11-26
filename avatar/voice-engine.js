@@ -14,12 +14,22 @@
  function interrupt(){if(api?.readyState===1){api.send(JSON.stringify({type:'response.cancel'}));api.send(JSON.stringify({type:'input_audio_buffer.clear'}));}resetPlayback();}
  function applyDepth(name){const depth=BatVoicePolicy.depths[name]||BatVoicePolicy.depths.medium;if(api?.readyState===1)api.send(JSON.stringify({type:'session.update',session:{type:'realtime',instructions:BatVoicePolicy.instructions+'\n'+depth.instructions,max_output_tokens:depth.tokens}}));}
  function ask(text){text=String(text||'').trim().slice(0,1500);if(!text||api?.readyState!==1)return;status('thinking','考えています');api.send(JSON.stringify({type:'conversation.item.create',item:{type:'message',role:'user',content:[{type:'input_text',text}]}}));api.send(JSON.stringify({type:'response.create'}));}
+ let preparing=false;
  async function prepare(){
-  try{const permission=await navigator.mediaDevices.getUserMedia({audio:true});permission.getTracks().forEach(t=>t.stop());const devices=(await navigator.mediaDevices.enumerateDevices()).filter(d=>d.kind==='audioinput');
+  if(preparing)return;preparing=true;prepared=false;$('prepareMic').disabled=true;status('off','マイク許可を確認中…');
+  let expired=false,timeout;
+  try{
+   const available=(await navigator.mediaDevices.enumerateDevices()).filter(d=>d.kind==='audioinput');
+   const wanted=available.find(d=>/Comica.*EJoy|EJoy.*D10/i.test(d.label))||available.find(d=>d.deviceId===localStorage.getItem('bat-voice-mic'));
+   const request=navigator.mediaDevices.getUserMedia({audio:wanted?{deviceId:{exact:wanted.deviceId}}:true});
+   request.then(s=>{if(expired)s.getTracks().forEach(t=>t.stop());}).catch(()=>{});
+   const permission=await Promise.race([request,new Promise((_,reject)=>{timeout=setTimeout(()=>{expired=true;reject(Object.assign(Error('Chromeのアドレスバーにあるマイク許可を確認してください。許可待ちのまま12秒経過しました。'),{name:'PermissionPending'}));},12000);})]);
+   permission.getTracks().forEach(t=>t.stop());const devices=(await navigator.mediaDevices.enumerateDevices()).filter(d=>d.kind==='audioinput');
    $('helperMic').replaceChildren(...devices.map(d=>{const o=document.createElement('option');o.value=d.deviceId;o.textContent=d.label||'マイク';return o;}));
-   const wanted=devices.find(d=>/Comica.*EJoy|EJoy.*D10/i.test(d.label))||devices.find(d=>d.deviceId===localStorage.getItem('bat-voice-mic'));if(wanted)$('helperMic').value=wanted.deviceId;
+   const selected=devices.find(d=>/Comica.*EJoy|EJoy.*D10/i.test(d.label))||devices.find(d=>d.deviceId===localStorage.getItem('bat-voice-mic'));if(selected)$('helperMic').value=selected.deviceId;
    prepared=true;status('off','マイク準備済み。OBSドックのAIをONにしてください。');
-  }catch(e){status('error',e.name==='NotAllowedError'?'マイクの許可が必要です。Chromeで許可してください。':'マイクを確認してください。');}
+  }catch(e){status('error',e.name==='PermissionPending'?e.message:e.name==='NotAllowedError'?'マイクが拒否されています。Chromeのアドレスバーのサイト設定でマイクを許可してください。':e.name==='NotReadableError'?'マイクを開けません。他のアプリで占有されていないか確認してください。':'マイクを確認してください。');}
+  finally{clearTimeout(timeout);preparing=false;$('prepareMic').disabled=false;}
  }
  async function start(){
   if(running||state==='connecting')return;if(!prepared)return status('error','Chromeの準備画面でマイクを準備してください。');
