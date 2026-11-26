@@ -46,10 +46,10 @@ async function connect(){
 }
 function applySettings(next){const previousMic=cfg.mic;
  if(!Object.prototype.hasOwnProperty.call(next,'autoMotions')&&Object.prototype.hasOwnProperty.call(next,'smoking'))next={...next,autoMotions:['scratch',...(next.smoking?['smoke']:[])]};
- cfg={...cfg,...next};cfg.angerMarkScale=Math.max(.7,Math.min(4,Number(cfg.angerMarkScale)||2.4));cfg.expression=Object.prototype.hasOwnProperty.call(expressionNames,cfg.expression)?cfg.expression:'normal';cfg.autoMotions=Array.isArray(cfg.autoMotions)?[...new Set(cfg.autoMotions.filter(k=>Object.prototype.hasOwnProperty.call(motionNames,k)))]:[...defaults.autoMotions];cfg.autoInterval=Math.max(10,Math.min(600,Math.round(Number(cfg.autoInterval)||60)));
+ cfg={...cfg,...next};cfg.scale=100;cfg.posX=0;cfg.posY=0;cfg.layoutMode='obs';cfg.angerMarkScale=Math.max(.7,Math.min(4,Number(cfg.angerMarkScale)||2.4));cfg.expression=Object.prototype.hasOwnProperty.call(expressionNames,cfg.expression)?cfg.expression:'normal';cfg.autoMotions=Array.isArray(cfg.autoMotions)?[...new Set(cfg.autoMotions.filter(k=>Object.prototype.hasOwnProperty.call(motionNames,k)))]:[...defaults.autoMotions];cfg.autoInterval=Math.max(10,Math.min(600,Math.round(Number(cfg.autoInterval)||60)));
  const nextAutoSignature=JSON.stringify([cfg.auto,cfg.autoMotions,cfg.autoInterval,cfg.kotatsu]);if(autoScheduleSignature!==nextAutoSignature){autoScheduleSignature=nextAutoSignature;nextGesture=performance.now()+cfg.autoInterval*1000;autoCursor=0;}cfg.threshold=Math.max(-60,Math.min(-15,Number(cfg.threshold)||-42));cfg.scale=Math.max(30,Math.min(200,Number(cfg.scale)||100));cfg.posX=Math.max(-960,Math.min(960,Number(cfg.posX)||0));cfg.posY=Math.max(-540,Math.min(540,Number(cfg.posY)||0));cfg.sfxVolume=Math.max(0,Math.min(100,Number(cfg.sfxVolume)||0));if(dock){
  $('port').value=port;$('angerMarkSize').value=Math.round(cfg.angerMarkScale*100);$('angerMarkSizeValue').textContent=Math.round(cfg.angerMarkScale*100)+'%';
- for(const key of ['scale','posX','posY','sfxVolume']){$(key).value=cfg[key];$(key+'Value').textContent=cfg[key]+(key==='scale'||key==='sfxVolume'?'%':' px');}
+ for(const key of ['sfxVolume']){$(key).value=cfg[key];$(key+'Value').textContent=cfg[key]+(key==='scale'||key==='sfxVolume'?'%':' px');}
  $('threshold').value=cfg.threshold;$('thresholdValue').textContent=cfg.threshold+' dB';
  $('auto').checked=cfg.auto;
  for(const b of document.querySelectorAll('[data-expression]')){const selected=b.dataset.expression===cfg.expression;b.setAttribute('aria-pressed',String(selected));b.classList.toggle('active',selected);}
@@ -122,7 +122,7 @@ function handleEvent(e){
  }
  if(d.kind==='gesture'&&d.sender!==clientId)triggerGesture(d.gesture);
  if(d.kind==='test')testUntil=performance.now()+4500;
- if(d.kind==='diagnostics')sendEvent({kind:'diagnostics-response',mode,build:'three-references-v8',emotions:window.batEmotionDiagnostics?.(),expression:cfg.expression,mouthOpen:lastMouthOpen,autoMotions:eligibleAutoMotions(),autoInterval:cfg.autoInterval,palette:paletteReport,ready,imagesReady,mic:cfg.mic,sfxVolume:cfg.sfxVolume,error:lastError,gesture,layout:{scale:cfg.scale,posX:cfg.posX,posY:cfg.posY}}).catch(()=>{});
+ if(d.kind==='diagnostics')sendEvent({kind:'diagnostics-response',mode,build:'independent-sources-v9',emotions:window.batEmotionDiagnostics?.(),expression:cfg.expression,mouthOpen:lastMouthOpen,autoMotions:eligibleAutoMotions(),autoInterval:cfg.autoInterval,palette:paletteReport,ready,imagesReady,mic:cfg.mic,sfxVolume:cfg.sfxVolume,error:lastError,gesture,layout:{scale:cfg.scale,posX:cfg.posX,posY:cfg.posY}}).catch(()=>{});
  if(d.kind==='hello'&&!dock)sendEvent({kind:'settings',settings:cfg}).catch(()=>{});
  }
 }
@@ -159,7 +159,7 @@ function frame(now){
  runAutoMotion(now);
  const energy=Math.max(0,Math.min(1,(rmsDb-cfg.threshold+8)/25));mouthPhase+=dt*(3.4+energy*2.1+.35*Math.sin(now/580))*Math.PI*2;
  const mouthOpen=speaking&&Math.sin(mouthPhase)>-.1;lastMouthOpen=mouthOpen;
- ctx.clearRect(0,0,1920,1080);if(cfg.background&&(dock||!cfg.roomSeparate)&&typeof window.drawBatBackground==='function')window.drawBatBackground(ctx,now);
+ ctx.clearRect(0,0,1920,1080);if(!dock&&cfg.background&&!cfg.roomSeparate&&typeof window.drawBatBackground==='function')window.drawBatBackground(ctx,now);
  if(imagesReady){
  
  ctx.save();ctx.translate(cfg.posX,cfg.posY);ctx.translate(960,540);ctx.scale(cfg.scale/100,cfg.scale/100);ctx.translate(-960,-540);
@@ -177,7 +177,7 @@ function frame(now){
  if(gesture==='smoke')drawCigaretteSmoke(now);
  ctx.restore();
  }
- if(dock)window.drawBatPropPreview?.(ctx,cfg);
+
  if(dock){if(gesture!==lastShownGesture){lastShownGesture=gesture;for(const b of document.querySelectorAll('[data-gesture]'))b.classList.toggle('active',b.dataset.gesture===gesture);}$('meter').style.width=Math.max(0,Math.min(100,(db+70)/70*100))+'%';$('volume').textContent=muted?'マイク消音':db>-90?Math.round(db)+' dB':'無音';
  $('mouth').textContent=gesture==='smile'?'にっこり':speaking?'話しています':'待機中';}
  requestAnimationFrame(frame);
@@ -212,12 +212,12 @@ function guard(fn){return (...args)=>Promise.resolve().then(()=>fn(...args)).cat
 if(dock){
  for(const tab of document.querySelectorAll('[data-tab]'))tab.onclick=()=>{for(const b of document.querySelectorAll('[data-tab]')){const selected=b===tab;b.setAttribute('aria-selected',String(selected));document.getElementById('panel-'+b.dataset.tab).hidden=!selected;}};
  document.addEventListener('keydown',e=>{if(/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)||e.ctrlKey||e.altKey||e.metaKey)return;if(e.repeat)return;const expressions={q:'joy',w:'anger',e:'sadness',r:'delight',n:'normal'};if(expressions[e.key.toLowerCase()]){e.preventDefault();chooseExpression(expressions[e.key.toLowerCase()]).catch(error=>setNotice(error.message));return;}const names={'1':'scratch','2':'smoke','3':'fart','0':'normal'};if(names[e.key]){e.preventDefault();triggerGesture(names[e.key]);sendEvent({kind:'gesture',gesture:names[e.key]}).catch(()=>{});}});
- for(const key of ['scale','posX','posY','sfxVolume']){$(key).oninput=()=>{cfg[key]=Number($(key).value);applySettings(cfg);queueLiveSettings();clearTimeout(persistTimer);persistTimer=setTimeout(()=>persistSettings().catch(e=>setNotice(e.message)),400);};$(key).onchange=guard(save);}
+ for(const key of ['sfxVolume']){$(key).oninput=()=>{cfg[key]=Number($(key).value);applySettings(cfg);queueLiveSettings();clearTimeout(persistTimer);persistTimer=setTimeout(()=>persistSettings().catch(e=>setNotice(e.message)),400);};$(key).onchange=guard(save);}
  $('angerMarkSize').oninput=()=>{cfg.angerMarkScale=Number($('angerMarkSize').value)/100;applySettings(cfg);queueLiveSettings();clearTimeout(persistTimer);persistTimer=setTimeout(()=>persistSettings().catch(e=>setNotice(e.message)),400);};$('angerMarkSize').onchange=guard(save);
  for(const button of document.querySelectorAll('[data-expression]'))button.onclick=guard(()=>chooseExpression(button.dataset.expression));
  for(const input of document.querySelectorAll('[data-auto-motion]'))input.onchange=guard(async()=>{cfg.autoMotions=[...document.querySelectorAll('[data-auto-motion]')].filter(el=>el.checked).map(el=>el.dataset.autoMotion);await save();});
  $('autoInterval').onchange=guard(async()=>{cfg.autoInterval=Number($('autoInterval').value);await save();});
- $('resetLayout').onclick=guard(async()=>{cfg.scale=100;cfg.posX=0;cfg.posY=0;await save();});
+
  $('mic').onchange=guard(async()=>{cfg.mic=$('mic').value;await save();});
  $('refresh').onclick=guard(refreshInputs);
  $('device').onchange=guard(async()=>{await request('SetInputSettings',{inputName:cfg.mic,inputSettings:{device_id:$('device').value},overlay:true});setNotice('マイク機器を切り替えました。');});

@@ -1,7 +1,7 @@
 'use strict';
 window.installBatPropScene=async function(request,{sceneName,password,port,config,baseURL}){
  const manifest=window.BAT_PROP_MANIFEST,first=!config.roomSeparate,order=['room','figure','kotatsu','shochu','ashtray','mikan-platter','atsukan'],created=[];
- if(first)Object.assign(config,{scale:50,posX:-598,posY:120,angerMarkScale:2.4});
+ Object.assign(config,{scale:100,posX:0,posY:0,layoutMode:'obs'});
  Object.assign(config,{roomSeparate:true,kotatsu:true,figure:true});
  const inputs=(await request('GetInputList')).inputs;
  for(const key of order){const s=manifest[key];if(!s)continue;
@@ -12,12 +12,12 @@ window.installBatPropScene=async function(request,{sceneName,password,port,confi
  else await request('SetInputSettings',{inputName:s.sourceName,inputSettings,overlay:true});
  let items=(await request('GetSceneItemList',{sceneName})).sceneItems,item=items.find(i=>i.sourceName===s.sourceName);
  if(!item){const r=await request('CreateSceneItem',{sceneName,sourceName:s.sourceName,sceneItemEnabled:true});item={sceneItemId:r.sceneItemId};created.push(key);}
- if(first||created.includes(key))await request('SetSceneItemTransform',{sceneName,sceneItemId:item.sceneItemId,sceneItemTransform:window.batPropTransform(s,config)});
+ if(first||created.includes(key))await request('SetSceneItemTransform',{sceneName,sceneItemId:item.sceneItemId,sceneItemTransform:window.batPropTransform(s,{scale:50,posX:-598,posY:120})});
  }
  if(first){const items=(await request('GetSceneItemList',{sceneName})).sceneItems;
  const names=[manifest.room.sourceName,manifest.figure?.sourceName,'BAT キャラ（ブラウザ）',...order.slice(2).map(k=>manifest[k]?.sourceName)].filter(Boolean);
  for(let i=0;i<names.length;i++){const item=items.find(x=>x.sourceName===names[i]);if(item)await request('SetSceneItemIndex',{sceneName,sceneItemId:item.sceneItemId,sceneItemIndex:i});}
- const avatar=items.find(x=>x.sourceName==='BAT キャラ（ブラウザ）');if(avatar)await request('SetSceneItemTransform',{sceneName,sceneItemId:avatar.sceneItemId,sceneItemTransform:{positionX:0,positionY:0,scaleX:1,scaleY:1,rotation:0,alignment:5,boundsType:'OBS_BOUNDS_NONE'}});
+ const avatar=items.find(x=>x.sourceName==='BAT キャラ（ブラウザ）');if(avatar)await request('SetSceneItemTransform',{sceneName,sceneItemId:avatar.sceneItemId,sceneItemTransform:{positionX:-118,positionY:390,scaleX:.5,scaleY:.5,rotation:0,alignment:5,boundsType:'OBS_BOUNDS_NONE'}});
  }
  return {created};
 };
