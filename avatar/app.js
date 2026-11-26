@@ -33,7 +33,7 @@ async function connect(){
  if(m.op===0){const identify={rpcVersion:1,eventSubscriptions:65545};
  if(m.d.authentication)identify.authentication=await digest((await digest(password+m.d.authentication.salt))+m.d.authentication.challenge);
  ws.send(JSON.stringify({op:1,d:identify}));}
- if(m.op===2){ready=true;lastError='';connection('OBS 接続済み','ok');sessionStorage.setItem(system+'-password',password);await initialize();}
+ if(m.op===2){ready=true;lastError='';connection('OBS 接続済み','ok');sessionStorage.setItem(system+'-password',password);await initialize();if(dock)window.dispatchEvent(new Event('bat-obs-connected'));}
  if(m.op===7){const p=waiting.get(m.d.requestId);if(p){clearTimeout(p.timer);waiting.delete(m.d.requestId);m.d.requestStatus.result?p.resolve(m.d.responseData||{}):p.reject(Error(m.d.requestStatus.comment||'OBSの設定を確認してください'));}}
  if(m.op===5)handleEvent(m.d);
  }catch(error){setNotice(error.message);}
@@ -79,6 +79,12 @@ async function installFartSource(sceneName){
  const items=(await request('GetSceneItemList',{sceneName})).sceneItems,avatar=items.find(i=>i.sourceName==='BAT キャラ（ブラウザ）'),effect=items.find(i=>i.sourceName===inputName);
  if(avatar&&effect){const keys=['positionX','positionY','scaleX','scaleY','rotation','alignment','cropTop','cropLeft','cropRight','cropBottom','boundsType'];await request('SetSceneItemTransform',{sceneName,sceneItemId:effect.sceneItemId,sceneItemTransform:Object.fromEntries(keys.map(k=>[k,avatar.sceneItemTransform[k]]))});await request('SetSceneItemIndex',{sceneName,sceneItemId:effect.sceneItemId,sceneItemIndex:items.length-1});}cfg.fartSeparate=true;
 }
+async function installVoiceAudioSource(sceneName){
+ const inputName='BAT AI音声',url=new URL('voice-playback.html',location.href);url.hash=new URLSearchParams({p:password,port:String(port)}).toString();
+ const list=(await request('GetInputList')).inputs,settings={url:url.href,width:16,height:16,fps:30,fps_custom:true,is_local_file:false,shutdown:false,restart_when_active:false,reroute_audio:true};
+ if(!list.some(i=>i.inputName===inputName)){await request('CreateInput',{sceneName,inputName,inputKind:'browser_source',inputSettings:settings,sceneItemEnabled:true});await request('SetInputAudioMonitorType',{inputName,monitorType:'OBS_MONITORING_TYPE_MONITOR_AND_OUTPUT'});}
+ else{await request('SetInputSettings',{inputName,inputSettings:settings,overlay:true});const items=(await request('GetSceneItemList',{sceneName})).sceneItems;if(!items.some(i=>i.sourceName===inputName))await request('CreateSceneItem',{sceneName,sourceName:inputName,sceneItemEnabled:true});}
+}
 async function installOBS(){
  const sceneName='BAT キャラ配信',inputName='BAT キャラ（ブラウザ）';
  const scenes=await request('GetSceneList');if(!scenes.scenes.some(s=>s.sceneName===sceneName))await request('CreateScene',{sceneName});
@@ -88,7 +94,7 @@ async function installOBS(){
  await request('SetInputSettings',{inputName,inputSettings,overlay:true});const items=await request('GetSceneItemList',{sceneName});if(!items.sceneItems.some(i=>i.sourceName===inputName))await request('CreateSceneItem',{sceneName,sourceName:inputName,sceneItemEnabled:true});
  }else await request('CreateInput',{sceneName,inputName,inputKind:'browser_source',inputSettings,sceneItemEnabled:true});
  const special=await request('GetSpecialInputs');if(!special.mic1){const available=inputs.inputs.find(i=>/wasapi_input_capture|coreaudio_input_capture|pulse_input_capture/.test(i.inputKind));if(available){const items=await request('GetSceneItemList',{sceneName});if(!items.sceneItems.some(i=>i.sourceName===available.inputName))await request('CreateSceneItem',{sceneName,sourceName:available.inputName,sceneItemEnabled:true});cfg.mic=available.inputName;}else{await request('CreateInput',{sceneName,inputName:'キャラ用マイク',inputKind:'wasapi_input_capture',inputSettings:{device_id:'default',use_device_timing:false},sceneItemEnabled:true});cfg.mic='キャラ用マイク';}}
- await window.installBatPropScene(request,{sceneName,password,port,config:cfg,baseURL:location.href});await installFartSource(sceneName);
+ await window.installBatPropScene(request,{sceneName,password,port,config:cfg,baseURL:location.href});await installFartSource(sceneName);await installVoiceAudioSource(sceneName);
  const stream=await request('GetStreamStatus');if(!stream.outputActive)await request('SetCurrentProgramScene',{sceneName});
  setNotice('OBSにキャラを追加しました。話すと口が動きます。');
 }
@@ -123,7 +129,7 @@ function handleEvent(e){
  if(calibration)calibration.push(db);}
  }
  if(e.eventType==='CustomEvent'){
- const d=e.eventData.eventData||e.eventData;if(!d||d.system!==system)return;
+ const d=e.eventData.eventData||e.eventData;if(d?.system==='bat-voice-v1'){if(dock)window.dispatchEvent(new CustomEvent('bat-voice-event',{detail:d}));return;}if(!d||d.system!==system)return;
  if(d.kind==='sfx-error')setNotice('効果音の再生を確認できません。');
  if(d.kind==='settings'&&d.sender!==clientId){
  const prior=receivedSettings.get(d.sender)||0;
@@ -244,6 +250,6 @@ if(dock){
  $('copyOverlay').onclick=guard(()=>copyURL('overlay.html'));$('copyDock').onclick=guard(()=>copyURL('index.html'));
 }
 if(!effectOnly)loadImages().catch(e=>{lastError=e.message;setNotice(e.message);});
-connect();requestAnimationFrame(frame);
+if(dock)window.batVoiceOBS={request};connect();requestAnimationFrame(frame);
 window.batAvatarDiagnostics=()=>({ready,imagesReady,mic:cfg.mic,threshold:cfg.threshold,db,muted,speaking,gesture,error:lastError,mode});
 })();
