@@ -1,11 +1,13 @@
 'use strict';
 (async()=>{
+ const character=new BatCharacterVoice();
  const $=id=>document.getElementById(id),id=crypto.randomUUID();let prepared=false,state='off',running=false,generation=0,activeSession='',stream=null,audioContext=null,processor=null,api=null,abort=null,timer=null,sessionStarted=0;
  const status=(next,message)=>{state=next;$('helperStatus').textContent=message;bus.send({kind:'engine-status',sender:id,state,prepared,message,started:sessionStarted}).catch(()=>{});};
  const bus=new BatVoice.Bus(event=>{if(event.kind==='command'&&event.target===id){if(event.action==='start')start();if(event.action==='stop')stop('OFF');if(event.action==='interrupt')interrupt();if(event.action==='text')ask(event.text);if(event.action==='depth')applyDepth(event.depth);}},()=>status(state,prepared?'マイク準備済み。OBSドックからONにできます。':'マイク準備待ち'));
  setInterval(()=>{if(running&&!bus.ready)stop('OBS接続が切れたため停止');if(bus.ready)bus.send({kind:'engine-status',sender:id,state,prepared,message:$('helperStatus').textContent,started:sessionStarted}).catch(()=>{});},2000);
  function bytes64(buffer){let text='';for(const n of new Uint8Array(buffer))text+=String.fromCharCode(n);return btoa(text);}
- async function resetPlayback(){await bus.send({kind:'audio-reset',session:activeSession,sender:id}).catch(()=>{});}
+ function sendCharacter(pcm){if(pcm?.length)bus.send({kind:'audio',sender:id,session:activeSession,pcm:bytes64(pcm.buffer)}).catch(()=>stop('OBS接続が切れたため停止'));}
+ async function resetPlayback(){character.reset();await bus.send({kind:'audio-reset',session:activeSession,sender:id}).catch(()=>{});}
  function cleanup(){clearTimeout(timer);abort?.abort();abort=null;processor?.disconnect();processor=null;stream?.getTracks().forEach(t=>t.stop());stream=null;audioContext?.close().catch(()=>{});audioContext=null;if(api){api.onclose=null;api.onerror=null;api.close();api=null;}}
  function stop(message='OFF'){generation++;running=false;cleanup();resetPlayback();sessionStarted=0;status('off',message);}
  function fail(message){stop(message);status('error',message);}
@@ -26,7 +28,7 @@
    const cfg=await bus.config();if(!cfg.endpoint||!cfg.accessToken)throw Error('接続先の設定待ちです。');
    const endpoint=new URL(cfg.endpoint);if(endpoint.protocol!=='https:')throw Error('接続先にはHTTPSが必要です。');
    abort=new AbortController();const wait=setTimeout(()=>abort?.abort(),80000);
-   let response;try{response=await fetch(endpoint.origin+'/token',{method:'POST',headers:{Authorization:'Bearer '+cfg.accessToken,'Content-Type':'application/json'},body:JSON.stringify({voice:cfg.voice||'coral',depth:cfg.depth||'medium'}),signal:abort.signal,cache:'no-store'});}finally{clearTimeout(wait);}
+   let response;try{response=await fetch(endpoint.origin+'/token',{method:'POST',headers:{Authorization:'Bearer '+cfg.accessToken,'Content-Type':'application/json'},body:JSON.stringify({voice:BatVoicePolicy.voice,depth:cfg.depth||'medium'}),signal:abort.signal,cache:'no-store'});}finally{clearTimeout(wait);}
    if(!response.ok){const info=await response.json().catch(()=>({}));if(info.error==='billing_not_confirmed')throw Error('前払いと利用上限の設定確認待ちです。');const codes={401:'接続コードを確認してください。',429:'APIの残高または利用制限を確認してください。',503:'サーバーのAPIキー設定待ちです。'};throw Error(codes[response.status]||'音声サーバーに接続できません。');}
    const token=await response.json();if(typeof token.value!=='string'||!token.value.startsWith('ek_'))throw Error('音声接続を開始できません。');
    if(myGeneration!==generation)return;
@@ -34,10 +36,10 @@
    await new Promise((resolve,reject)=>{const timeout=setTimeout(()=>reject(Error('AI接続がタイムアウトしました。')),15000);socket.onopen=()=>{clearTimeout(timeout);resolve();};socket.onerror=()=>{clearTimeout(timeout);reject(Error('AI接続に失敗しました。'));};});
    if(myGeneration!==generation){socket.close();return;}
    socket.onmessage=e=>{let m;try{m=JSON.parse(e.data);}catch{return;}
-    if(m.type==='response.output_audio.delta'||m.type==='response.audio.delta'){bus.send({kind:'audio',sender:id,session:activeSession,pcm:m.delta}).catch(()=>stop('OBS接続が切れたため停止'));if(state!=='speaking')status('speaking','AIが話しています');}
+    if(m.type==='response.output_audio.delta'||m.type==='response.audio.delta'){const raw=atob(m.delta);if(raw.length%2||raw.length>98304)return;const bytes=Uint8Array.from(raw,x=>x.charCodeAt(0));sendCharacter(character.push(new Int16Array(bytes.buffer)));if(state!=='speaking')status('speaking','AIが話しています');}
     if(m.type==='input_audio_buffer.speech_started'){resetPlayback();status('question','聞いています');}
     if(m.type==='input_audio_buffer.speech_stopped')status('thinking','考えています');
-    if(m.type==='response.done')status('listening','話しかけてください');
+    if(m.type==='response.done'){sendCharacter(character.finish());status('listening','話しかけてください');}
     if(m.type==='response.output_audio_transcript.delta'||m.type==='response.audio_transcript.delta')$('helperReply').textContent=($('helperReply').textContent+m.delta).slice(-2000);
     if(m.type==='error'&&m.error?.code!=='response_cancel_not_active')fail('AI接続エラー。残高・API設定を確認してください。');
    };
