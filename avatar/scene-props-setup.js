@@ -5,7 +5,7 @@ window.installBatPropScene=async function(request,{sceneName,password,port,confi
  Object.assign(config,{roomSeparate:true,kotatsu:true,figure:true});
  const inputs=(await request('GetInputList')).inputs;
  for(const key of order){const s=manifest[key];if(!s)continue;
- const url=new URL('props.html',baseURL);url.searchParams.set('asset',key);url.hash=new URLSearchParams({p:password,port:String(port)}).toString();
+ const url=new URL('props.html',baseURL);url.searchParams.set('asset',key);url.searchParams.set('v','2');url.hash=new URLSearchParams({p:password,port:String(port)}).toString();
  const inputSettings={url:url.href,width:s.kind==='room'?1920:s.crop.w,height:s.kind==='room'?1080:s.crop.h,fps:30,fps_custom:true,is_local_file:false,shutdown:false,restart_when_active:false,reroute_audio:false};
  const exists=inputs.some(i=>i.inputName===s.sourceName);
  if(!exists){await request('CreateInput',{sceneName,inputName:s.sourceName,inputKind:'browser_source',inputSettings,sceneItemEnabled:true});created.push(key);}
