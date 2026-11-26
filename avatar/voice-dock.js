@@ -1,9 +1,9 @@
 'use strict';
 (()=>{
- const $=id=>document.getElementById(id);let cfg={endpoint:'',accessToken:'',voice:'coral',depth:'medium',volume:55},engine=null,lastEngine=0,engineState='off',prepared=false,bridgeReady=false;
+ const $=id=>document.getElementById(id);let cfg={endpoint:'',accessToken:'',voice:'coral',depth:'medium',volume:55},engine=null,lastEngine=0,engineState='off',prepared=false,bridgeReady=false,serverReady=null;
  const request=(...a)=>window.batVoiceOBS.request(...a),send=d=>request('BroadcastCustomEvent',{eventData:{system:'bat-voice-v1',...d}}),notice=t=>$('aiStatus').textContent=t;
  function form(){ $('aiEndpoint').value=cfg.endpoint||'';$('aiAccess').value=cfg.accessToken||'';$('aiVoice').value=cfg.voice||'coral';$('aiVolume').value=cfg.volume;$('aiVolumeValue').textContent=cfg.volume+'%';for(const b of document.querySelectorAll('[data-ai-depth]'))b.setAttribute('aria-pressed',String(b.dataset.aiDepth===cfg.depth));}
- async function load(){try{const r=await request('GetPersistentData',{realm:'OBS_WEBSOCKET_DATA_REALM_PROFILE',slotName:'bat-voice-config-v1'});cfg={...cfg,...r.slotValue};form();notice(cfg.endpoint&&cfg.accessToken?'マイク準備画面を開いてください。':'接続サーバー・APIキーの設定待ちです。');}catch{notice('OBSへの接続待ちです。');}}
+ async function load(){try{const r=await request('GetPersistentData',{realm:'OBS_WEBSOCKET_DATA_REALM_PROFILE',slotName:'bat-voice-config-v1'});cfg={...cfg,...r.slotValue};form();notice(cfg.endpoint&&cfg.accessToken?'接続先を確認しています…':'接続サーバー・APIキーの設定待ちです。');if(cfg.endpoint&&cfg.accessToken){try{const h=await fetch(cfg.endpoint+'/health',{cache:'no-store',signal:AbortSignal.timeout(15000)}).then(r=>r.json());serverReady=!!h.configured;notice(serverReady?'マイク準備画面を開いてください。':'サーバーのAPIキー設定待ちです。');}catch{serverReady=null;notice('サーバー起動待ち。しばらくしてからONにしてください。');}}}catch{notice('OBSへの接続待ちです。');}}
  async function save(){await request('SetPersistentData',{realm:'OBS_WEBSOCKET_DATA_REALM_PROFILE',slotName:'bat-voice-config-v1',slotValue:cfg});await send({kind:'config',volume:cfg.volume});}
  async function command(action,extra={}){if(!engine||Date.now()-lastEngine>7000)throw Error('Chromeのマイク準備画面を開いてください。');await send({kind:'command',target:engine,action,...extra});}
  function guard(fn){return(...args)=>Promise.resolve().then(()=>fn(...args)).catch(e=>notice(e.message));}
@@ -20,7 +20,7 @@
  $('aiToggle').onclick=guard(async()=>{
   if(['connecting','listening','speaking'].includes(engineState)){await command('stop');return;}
   if(!cfg.endpoint||!cfg.accessToken){$('aiSetup').open=true;throw Error('接続先とAPIキーの設定がまだ完了していません。');}
-  if(!prepared)throw Error('Chromeでマイクを準備してください。');if(!bridgeReady)throw Error('OBSの「BAT AI音声」を確認してください。');
+  if(serverReady===false)throw Error('サーバーのAPIキー設定がまだ完了していません。');if(!prepared)throw Error('Chromeでマイクを準備してください。');if(!bridgeReady)throw Error('OBSの「BAT AI音声」を確認してください。');
   await command('start');notice('AIに接続中…');
  });
  $('aiInterrupt').onclick=guard(()=>command('interrupt'));
