@@ -4,9 +4,10 @@ const fs=require('node:fs'),crypto=require('node:crypto'),vm=require('node:vm'),
 (async()=>{
 const base='https://raw.githubusercontent.com/URA-NEWS/stream-op-git/708bd84c6ec9cf66e5cff0f123bf28ec573213a2/avatar/';
 async function get(path){const r=await fetch(base+path,{signal:AbortSignal.timeout(15000),cache:'no-store'});if(!r.ok)throw Error('Voice assets unavailable');return r.text();}
-const [vendor,character,policyText]=await Promise.all([get('vendor/soundtouch.js'),get('voice-character.js'),fetch('https://raw.githubusercontent.com/URA-NEWS/stream-op-git/main/voice-server/voice-policy.json?version='+Date.now(),{signal:AbortSignal.timeout(15000),cache:'no-store'}).then(r=>{if(!r.ok)throw Error('Voice policy unavailable');return r.text();})]);
+const [vendor,character,policyText]=await Promise.all([get('vendor/soundtouch.js'),get('voice-character.js'),fetch('https://raw.githubusercontent.com/URA-NEWS/stream-op-git/1120cff90ae3dafdcf6b84619782dbd6b14eba4b/voice-server/voice-policy.json',{signal:AbortSignal.timeout(15000),cache:'no-store'}).then(r=>{if(!r.ok)throw Error('Voice policy unavailable');return r.text();})]);
 const policy=policyText.startsWith('globalThis.')?JSON.parse(policyText.slice(policyText.indexOf('=')+1).trim().replace(/;$/,'')):JSON.parse(policyText);
 vm.runInThisContext(vendor);vm.runInThisContext(character);const dsp=new BatCharacterVoice();
+policy.instructions='最優先の口調指定：普通の返答は必ず「お前さあ」「雑すぎんだろ」「何やってんだよ」など短い悪態から始める。敬語に戻さず、口の悪いタメ口で答える。可愛い声とけだるさは保つ。\n'+policy.instructions;
 const obsConfig=JSON.parse(fs.readFileSync(process.env.APPDATA+'/obs-studio/plugin_config/obs-websocket/config.json','utf8'));
 const obs=new WebSocket('ws://127.0.0.1:'+obsConfig.server_port),pending=new Map(),id='bat-native-'+crypto.randomUUID();
 let seq=0,session='',state='off',running=false,starting=false,mic=null,api=null,stopTimer=null,heartbeat=null,settings={},epoch=0,pieces=Buffer.alloc(0),meterAt=0,started=0,heardSpeech=false;
@@ -36,6 +37,7 @@ async function start(){
    if(m.type==='error'&&m.error?.code!=='response_cancel_not_active'){console.error(JSON.stringify({apiError:m.error?.code||m.error?.type||'unknown'}));stop('AIエラー。利用上限・残高を確認してください。');}
   };
   socket.onerror=()=>stop('AI接続が切れたため停止');socket.onclose=()=>{if(running)stop('AI接続終了');};
+  depth(settings.depth||'medium');
   const device=process.env.BAT_COMICA_DEVICE||'マイク (2- Comica_EJoy D10 Pro TX)';
   const capture=spawn('ffmpeg',['-hide_banner','-loglevel','error','-f','dshow','-i','audio='+device,'-ac','1','-ar','24000','-f','s16le','pipe:1'],{windowsHide:true,stdio:['ignore','pipe','pipe']});mic=capture;
   capture.stderr.on('data',()=>{});capture.on('error',()=>{if(epoch===generation)stop('Comicaマイクを開けません');});capture.on('exit',()=>{if(epoch===generation&&running)stop('Comicaマイクが切断されました');});
