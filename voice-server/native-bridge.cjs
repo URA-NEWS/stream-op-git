@@ -2,7 +2,7 @@
 // Remote-hosted microphone bridge. No local web server or API key file required.
 const fs=require('node:fs'),crypto=require('node:crypto'),vm=require('node:vm'),{spawn}=require('node:child_process');
 (async()=>{
-const base='https://ura-news.github.io/stream-op-git/avatar/';
+const base='https://raw.githubusercontent.com/URA-NEWS/stream-op-git/708bd84c6ec9cf66e5cff0f123bf28ec573213a2/avatar/';
 async function get(path){const r=await fetch(base+path,{signal:AbortSignal.timeout(15000),cache:'no-store'});if(!r.ok)throw Error('Voice assets unavailable');return r.text();}
 const [vendor,character,policyText]=await Promise.all([get('vendor/soundtouch.js'),get('voice-character.js'),get('../voice-server/voice-policy.json').catch(()=>get('voice-policy.js'))]);
 const policy=policyText.startsWith('globalThis.')?JSON.parse(policyText.slice(policyText.indexOf('=')+1).trim().replace(/;$/,'')):JSON.parse(policyText);
@@ -23,7 +23,7 @@ async function start(){
  if(running||starting)return;starting=true;const generation=++epoch;session=crypto.randomUUID();heardSpeech=false;status('connecting','Comicaマイクに接続中');
  try{
   settings=(await request('GetPersistentData',{realm:'OBS_WEBSOCKET_DATA_REALM_PROFILE',slotName:'bat-voice-config-v1'})).slotValue||{};
-  const endpoint=new URL(settings.endpoint);if(endpoint.protocol!=='https:')throw Error('Invalid voice endpoint');
+  const endpoint=new URL(settings.endpoint);if(endpoint.origin!=='https://bat-stream-voice.onrender.com')throw Error('Invalid voice endpoint');
   const r=await fetch(endpoint.origin+'/token',{method:'POST',headers:{Authorization:'Bearer '+settings.accessToken,'Content-Type':'application/json'},body:JSON.stringify({voice:'marin',depth:settings.depth||'medium'}),signal:AbortSignal.timeout(25000)});
   if(!r.ok)throw Error(r.status===429?'APIの利用上限・残高を確認してください':'AIサーバー接続エラー '+r.status);const token=await r.json();if(!/^ek_/.test(token.value))throw Error('Invalid ephemeral token');if(epoch!==generation)return;
   const socket=new WebSocket('wss://api.openai.com/v1/realtime?model=gpt-realtime-2.1-mini',['realtime','openai-insecure-api-key.'+token.value]);api=socket;
