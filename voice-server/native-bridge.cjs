@@ -11,7 +11,7 @@ const obsConfig=JSON.parse(fs.readFileSync(process.env.APPDATA+'/obs-studio/plug
 const obs=new WebSocket('ws://127.0.0.1:'+obsConfig.server_port),pending=new Map(),id='bat-native-'+crypto.randomUUID();
 let seq=0,session='',state='off',running=false,starting=false,mic=null,api=null,stopTimer=null,heartbeat=null,settings={},epoch=0,pieces=Buffer.alloc(0),meterAt=0,started=0,heardSpeech=false;
 const request=(requestType,requestData={})=>new Promise((resolve,reject)=>{const requestId=String(++seq),timer=setTimeout(()=>{pending.delete(requestId);reject(Error('OBS request timeout'));},7000);pending.set(requestId,{resolve,reject,timer});obs.send(JSON.stringify({op:6,d:{requestType,requestId,requestData}}));});
-const send=data=>request('BroadcastCustomEvent',{eventData:{system:'bat-voice-v1',sender:id,session,...data}}).catch(()=>{});
+const send=data=>{const eventData={system:'bat-voice-v1',sender:id,session,...data};if(['engine-status','input-level','audio-reset'].includes(data.kind))request('CallVendorRequest',{vendorName:'obs-browser',requestType:'emit_event',requestData:{event_name:'bat-voice-display',event_data:eventData}}).catch(()=>{});return request('BroadcastCustomEvent',{eventData}).catch(()=>{});};
 function status(next,message){state=next;send({kind:'engine-status',state,prepared:true,message,started});console.log(JSON.stringify({state,message}));}
 function emit(pcm){if(pcm?.length)send({kind:'audio',pcm:Buffer.from(pcm.buffer,pcm.byteOffset,pcm.byteLength).toString('base64')});}
 function reset(){dsp.reset();send({kind:'audio-reset'});}

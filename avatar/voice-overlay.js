@@ -1,10 +1,10 @@
 'use strict';
 (()=>{
-const canvas=document.getElementById('heaven'),g=canvas.getContext('2d',{alpha:true}),q=new URLSearchParams(location.search),linked=new URLSearchParams(location.hash.slice(1)).has('p'),preview=q.get('preview'),demo=Boolean(preview)||!linked;
+const canvas=document.getElementById('heaven'),g=canvas.getContext('2d',{alpha:true}),q=new URLSearchParams(location.search),local=q.get('mode')==='obs',linked=local||new URLSearchParams(location.hash.slice(1)).has('p'),preview=q.get('preview'),demo=Boolean(preview)||!linked;
 let state='off',speaker=null,lastEngine=0,lastOutput=-10000,lastInput=-10000,outLevel=0,inLevel=0,energy=0,opacity=0,previous=performance.now();
 const active=s=>['connecting','question','thinking','listening','speaking'].includes(s);
 function rms(data){try{const raw=atob(data);if(raw.length%2)return 0;const v=new DataView(Uint8Array.from(raw,c=>c.charCodeAt(0)).buffer);let sum=0;for(let i=0;i<v.byteLength;i+=2)sum+=(v.getInt16(i,true)/32768)**2;return Math.min(1,Math.sqrt(sum/(v.byteLength/2))*5);}catch{return 0;}}
-if(!demo)new BatVoice.Bus(d=>{
+function receive(d){
  const now=performance.now();
  if(d.kind==='engine-status'){
   if(speaker&&speaker!==d.sender&&active(state)&&now-lastEngine<7000)return;
@@ -13,8 +13,10 @@ if(!demo)new BatVoice.Bus(d=>{
  if(d.sender!==speaker&&speaker)return;
  if(d.kind==='input-level'){inLevel=Math.max(0,Math.min(1,d.level||0));lastInput=now;}
  if(d.kind==='audio'){outLevel=rms(d.pcm||'');lastOutput=now;}
+ if(d.kind==='output-level'){outLevel=Math.max(0,Math.min(1,d.level||0));lastOutput=now;}
  if(d.kind==='audio-reset'){lastOutput=-10000;outLevel=0;}
-});
+}
+if(!demo){if(local)window.addEventListener('bat-voice-display',e=>receive(e.detail||{}));else new BatVoice.Bus(receive);}
 function ellipse(x,y,rx,ry,color){g.beginPath();g.ellipse(x,y,rx,ry,0,0,Math.PI*2);g.fillStyle=color;g.fill();}
 function roundRect(x,y,w,h,r){g.beginPath();g.roundRect(x,y,w,h,r);}
 function frame(now){
