@@ -4,7 +4,7 @@ const fs=require('node:fs'),crypto=require('node:crypto'),vm=require('node:vm'),
 (async()=>{
 const base='https://raw.githubusercontent.com/URA-NEWS/stream-op-git/708bd84c6ec9cf66e5cff0f123bf28ec573213a2/avatar/';
 async function get(path){const r=await fetch(base+path,{signal:AbortSignal.timeout(15000),cache:'no-store'});if(!r.ok)throw Error('Voice assets unavailable');return r.text();}
-const [vendor,character,policyText]=await Promise.all([get('vendor/soundtouch.js'),get('voice-character.js'),fetch('https://raw.githubusercontent.com/URA-NEWS/stream-op-git/main/voice-server/voice-policy.json',{signal:AbortSignal.timeout(15000),cache:'no-store'}).then(r=>{if(!r.ok)throw Error('Voice policy unavailable');return r.text();})]);
+const [vendor,character,policyText]=await Promise.all([get('vendor/soundtouch.js'),get('voice-character.js'),fetch('https://raw.githubusercontent.com/URA-NEWS/stream-op-git/main/voice-server/voice-policy.json?version='+Date.now(),{signal:AbortSignal.timeout(15000),cache:'no-store'}).then(r=>{if(!r.ok)throw Error('Voice policy unavailable');return r.text();})]);
 const policy=policyText.startsWith('globalThis.')?JSON.parse(policyText.slice(policyText.indexOf('=')+1).trim().replace(/;$/,'')):JSON.parse(policyText);
 vm.runInThisContext(vendor);vm.runInThisContext(character);const dsp=new BatCharacterVoice();
 const obsConfig=JSON.parse(fs.readFileSync(process.env.APPDATA+'/obs-studio/plugin_config/obs-websocket/config.json','utf8'));
