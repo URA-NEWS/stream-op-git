@@ -1,11 +1,29 @@
 # 配信用音声AI
 
-固定モデル：gpt-realtime-2.1-mini。声はcoral、可愛い・けだるい毒舌の指示付き。小・中・大で回答の深さを切り替えます。
+音声処理は gpt-realtime-2.1-mini、返答文は安価な文章用の軽量モデル gpt-6-luna を使います。①の声は marin を基に、ピッチ1.32倍・話速維持で処理します。固定の悪態は追加しません。小・中・大で回答の深さを変えます。
 
-Renderの専用Web Serviceでroot directoryをvoice-server、buildをnpm ci --ignore-scripts、startをnpm start、Freeプランで起動します。APIキー未設定でもヘルスチェックは通り、/tokenは503で閉じています。
+## 現在のWindows接続
 
-秘密はサービス環境変数OPENAI_API_KEYとBAT_VOICE_TOKENに保存します。どちらもGitにコミットしません。/tokenはBearer接続コード必須で、GitHub Pagesオリジンに限定、開始回数制限付きです。ブラウザへ渡すのは60秒有効の短期キーだけです。
+native-bridge.cjs がComicaをFFmpegで直接取り込み、音声認識結果が確定してから返答を作成します。音声認識は gpt-4o-mini-transcribe（日本語）。認識結果は会話内の元の位置へ入れ、処理済みの音声Itemは削除します。聞き取れない時も文字入力を要求しません。「記憶を消して」は声でも受け付けます。
 
-OBSドックにはサーバーURLと接続コードを設定します。Chromeでvoice-helper.htmlを同じOBS接続情報のURLフラグメント付きで開き、マイクを準備。ドックからONにした間だけ音声をOpenAIへ送ります。出力音声はローカルOBS WebSocketを経由し、BAT AI音声ブラウザソースが再生します。OFF、ブラウザ終了、OBS接続切れ、15分経過でマイク・API接続を終了します。
+音声・返答作成ともにOpenAIへ直接送信します。Renderは /token の接続認証と短期キー発行を担当し、会話本文を中継しません。文章用の標準キーは、既に承認・保存された作業フォルダの .env.local の OPENAI_API_KEY をNodeプロセス内で読み、OpenAIの認証ヘッダーだけに使います。キーはブラウザ・URL・Git・ログへ出しません。別PCではそのPC用の安全なAPI設定、Node、FFmpeg、OBS接続設定が必要です。ローカルWebサーバーは作りません。
 
-npm test：実APIを呼ばず、認証・オリジン・レート制限・回答深さ・マイク停止・別エンジン宛てコマンドを検証します。課金・APIキー・ブラウザのマイク許可が揃うまでは、実際のAI音声応答は未検証です。
+検証済みのランチャーはGitの固定コミットとBlob SHAを照合し、BAT_VOICE_REVISION に同じコミットを渡します。設定と会話補助コードもその固定版から読み込み、ブランチのCDNキャッシュによる版ずれを防ぎます。
+
+OBSのAI OFF、OBS切断、15分経過でマイク・API接続・文章作成を停止します。発声は BAT AI音声、アニメーションは独立した BAT 天の声AI が担当します。天の声はOBS内のイベントだけで連動し、表示URLにOBSパスワードを含めません。口と波形のレベルは実際の再生時刻に合わせます。
+
+## 記憶
+
+会話の好み、決定事項、保留中の話題だけを上限付きの要約としてOBSプロファイルの専用設定に保存します。モデルの自動学習ではありません。録音ファイルや会話全文は保存しません。記憶はPCごとで、他PCへ自動同期しません。記憶消去は現在の会話と保存メモを消し、口調の設定は残します。
+
+## 専用サーバーと予算
+
+RenderのWeb Serviceは root directory=voice-server、build=npm ci --ignore-scripts、start=npm start。OPENAI_API_KEY と BAT_VOICE_TOKEN は非公開環境変数です。/token はBearer接続コード、GitHub PagesのOrigin制限、開始回数制限を使います。
+
+OpenAIプロジェクトの5米ドル強制上限と自動チャージOFFを使用します。BAT_VOICE_BILLING_READY と BAT_VOICE_BUDGET_VALID_UNTIL が未確認・期限切れなら接続を拒否します。毎月の上限リセットだけで自動再開しません。
+
+## 検証
+
+オフライン試験は認証、Origin、予算ガード、期限、停止処理、返答の文脈・サイズ制限、固定モデル、秘密を返答本文へ混ぜないことを確認します。実APIでは合成音声4件を本番の処理へ流し、認識、話題の引き継ぎ、返答、①の発声、声だけの記憶消去を確認しました。実ユーザーの録音をテストファイルに保存しません。
+
+音声認識の gpt-4o-mini-transcribe は、提供元の現行予定では2027-02-26に終了予定のため、継続運用時には後継の文字起こしモデルへの移行が必要です。
